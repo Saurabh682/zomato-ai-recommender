@@ -1,0 +1,27 @@
+AI-Powered Restaurant Recommendation System (Zomato Use Case)
+
+You are tasked with building an AI-powered restaurant recommendation service
+inspired by Zomato. The system should intelligently suggest restaurants based
+on user preferences by combining structured data with a Large Language Model (LLM).
+
+OBJECTIVE:
+- Take user preferences (location, budget, cuisine, ratings)
+- Use a real-world Zomato dataset (~52k restaurants)
+- Leverage an LLM (Gemini) to generate personalized, human-like recommendations
+- Display top-5 results with AI-generated explanations
+
+INPUTS:
+- Location (e.g., Delhi, Bangalore)
+- Budget: low (<300), medium (300-700), high (>700) INR for two
+- Cuisine (e.g., Italian, Chinese, North Indian)
+- Minimum rating (e.g., 3.5, 4.0)
+- Additional preferences (e.g., family-friendly, quick service, rooftop)
+
+OUTPUTS:
+- Top 5 restaurant recommendations
+- For each: Name, Cuisine, Rating, Cost for Two, AI explanation
+
+DATASET:
+- Source: HuggingFace — ManikaSaini/zomato-restaurant-recommendation
+- Size: ~52,000 restaurants across India
+- Fields: name, location, cuisines, approx_cost(for two people), aggregate_rating, etc.
