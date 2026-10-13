@@ -35,6 +35,10 @@ class DataLoader:
     _df: pd.DataFrame | None = None
 
     @classmethod
+    def is_loaded(cls) -> bool:
+        return cls._df is not None
+
+    @classmethod
     def get_df(cls) -> pd.DataFrame:
         if cls._df is None:
             cls._df = cls._load()

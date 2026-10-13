@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Zomato AI Recommender",
-    description="AI-powered restaurant recommendations using Gemini LLM",
+    description="AI-powered restaurant recommendations using Groq and Gemini LLMs",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -47,6 +47,7 @@ app.add_middleware(
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
+    expose_headers=["X-LLM-Fallback"],
 )
 
 app.include_router(recommend_router)
@@ -54,9 +55,9 @@ app.include_router(recommend_router)
 
 @app.get("/health")
 def health():
-    dataset_loaded = DataLoader._df is not None
+    loaded = DataLoader.is_loaded()
     return {
         "status": "ok",
-        "dataset_loaded": dataset_loaded,
-        "dataset_size": len(DataLoader._df) if dataset_loaded else 0,
+        "dataset_loaded": loaded,
+        "dataset_size": len(DataLoader.get_df()) if loaded else 0,
     }
