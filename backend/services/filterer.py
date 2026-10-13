@@ -30,22 +30,24 @@ def filter_restaurants(
     mask = pd.Series([True] * len(df), index=df.index)
 
     # 1. Location filter — partial match, case-insensitive
-    if location.strip():
-        mask &= df["location"].str.contains(location.strip(), case=False, na=False)
+    loc_clean = location.strip()
+    if loc_clean:
+        if loc_clean.lower() in ("bangalore", "bengaluru"):
+            # All records are in Bangalore; city-wide search
+            pass
+        else:
+            mask &= df["location"].str.contains(loc_clean, case=False, na=False)
 
     # 2. Budget filter
     budget_key = budget.lower().strip()
     if budget_key in BUDGET_RANGES:
         lo, hi = BUDGET_RANGES[budget_key]
-        # Include 0-cost records only when min is 0 (unknown cost)
-        cost_mask = (df[COST_COL] >= lo) & (df[COST_COL] <= hi)
-        if lo > 0:
-            cost_mask |= df[COST_COL] == 0  # unknown cost — keep for LLM to judge
-        mask &= cost_mask
+        mask &= (df[COST_COL] >= lo) & (df[COST_COL] <= hi)
 
     # 3. Cuisine filter — partial match
-    if cuisine.strip():
-        mask &= df["cuisines"].str.contains(cuisine.strip(), case=False, na=False)
+    cuis_clean = cuisine.strip()
+    if cuis_clean and cuis_clean.lower() not in ("any", "all"):
+        mask &= df["cuisines"].str.contains(cuis_clean, case=False, na=False)
 
     # 4. Rating filter
     if min_rating > 0:
@@ -56,6 +58,8 @@ def filter_restaurants(
     # 5. Cap at MAX_CANDIDATES, best-scored first
     if len(result) > MAX_CANDIDATES:
         result = result.nlargest(MAX_CANDIDATES, "_score")
+    else:
+        result = result.sort_values("_score", ascending=False)
 
     logger.info(
         "Filter [loc=%r budget=%r cuisine=%r rating>=%.1f] → %d rows",

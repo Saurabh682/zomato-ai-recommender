@@ -217,43 +217,20 @@ touch models/__init__.py routers/__init__.py services/__init__.py
 
 ## Phase 1 — Data Ingestion & Preprocessing
 
-**Goal**: Implement `DataLoader` (HuggingFace → clean Pandas DataFrame) and `Filterer` (5-step filter pipeline). This is the **structured data layer** that feeds the LLM.
+**Goal**: Implement `DataLoader` (HuggingFace → clean Pandas DataFrame) with local CSV caching, type coercion, and schema verification. This is the **data foundation layer**.
 
-**Reference**: Architecture §3 Steps 1–2, §4 `data_loader.py` and `filterer.py`
+**Reference**: Architecture §3 Step 1, §4 `data_loader.py`
 
 ---
 
-### 2.1 Implement `services/data_loader.py`
+### 1.1 Implement `services/data_loader.py`
 
 **Responsibilities:**
-- Load dataset from HuggingFace on first run; save local CSV cache
-- Subsequent startups: load from `.data_cache.csv` (fast)
-- Clean all columns; compute `_score` ranking signal
+- Load dataset from HuggingFace on first run; save local CSV cache at `.data_cache.csv`
+- Subsequent startups: load from local cache in < 5 seconds
+- Clean all columns: cost comma stripping, rating conversion ("4.1/5", "NEW", "-" → float), votes coercion
+- Compute composite ranking signal `_score = aggregate_rating * log10(votes + 1)`
 - Validate required schema columns exist
-
-**Key logic to implement:**
-
-```
-_clean(df):
-  cost col "approx_cost(for two people)":
-    str → strip commas → pd.to_numeric(errors="coerce") → fillna(0) → int
-
-  aggregate_rating:
-    pd.to_numeric(errors="coerce") → fillna(0.0)
-
-  votes:
-    pd.to_numeric(errors="coerce") → fillna(0) → int
-
-  name, location, cuisines:
-    fillna("") → str.strip()
-
-  _score:
-    rating * log10(votes + 1)   ← composite ranking signal
-
-_validate_schema(df):
-  assert all required columns exist
-  raise RuntimeError if any missing
-```
 
 **Required columns to validate:**
 ```python
@@ -266,22 +243,46 @@ REQUIRED_COLUMNS = {
 
 ---
 
+### Phase 1 — Acceptance Criteria
+
+| Check | Expected Result |
+|---|---|
+| Dataset Volume | `len(DataLoader.get_df()) >= 50,000` |
+| Cost column dtype | `int64` (no commas, no NaN, min >= 0) |
+| Rating column dtype | `float64` (clean 0.0 - 5.0 range) |
+| `_score` column exists | `True` (numeric composite score) |
+| `.data_cache.csv` created | Cached locally for fast startup |
+| Fast reload | Subsequent reloads execute in < 6 seconds |
+
+---
+
+## Phase 2 — User Input & Candidate Filtering
+
+**Goal**: Validate user input constraints (`models/schemas.py`) and implement the multi-criteria `Filterer` pipeline (`services/filterer.py`) to narrow ~52k records down to ≤ 400 top-ranked candidate restaurants.
+
+**Reference**: Architecture §3 Step 2, §4 `filterer.py` and `schemas.py`, `edge-case.md` (EC-FLT)
+
+---
+
+### 2.1 User Input Validation & Sanitization (`models/schemas.py`)
+
+- `location`: Required string (1–100 chars), whitespace-stripped and sanitized against XSS/injections.
+- `budget`: Strict enum (`"low"`, `"medium"`, `"high"`).
+- `cuisine`: Optional string (up to 100 chars).
+- `min_rating`: Float bounded strictly between `0.0` and `5.0`.
+- `preferences`: Optional free-text up to 300 chars, sanitized.
+
+---
+
 ### 2.2 Implement `services/filterer.py`
 
-**Responsibilities:**
-- Apply 5 sequential filter steps using boolean masks
-- Cap results at `MAX_CANDIDATES = 400`
-- Sort by `_score` descending before capping
-
-**Filter pipeline:**
-
+**Filter pipeline execution:**
 ```
-Step 1 — Location  : df["location"].str.contains(location, case=False, na=False)
-Step 2 — Budget    : map "low"/"medium"/"high" → INR range → cost_for_two mask
-                     include cost=0 (unknown) when budget is not "low"
-Step 3 — Cuisine   : df["cuisines"].str.contains(cuisine, case=False, na=False)
-Step 4 — Min Rating: df["aggregate_rating"] >= min_rating
-Step 5 — Cap       : nlargest(MAX_CANDIDATES, "_score") if len > MAX_CANDIDATES
+Step 1 — Location  : Case-insensitive substring match (city-wide for 'Bangalore'/'Bengaluru')
+Step 2 — Budget    : Strict interval matching based on BUDGET_RANGES
+Step 3 — Cuisine   : Case-insensitive substring match in cuisines column
+Step 4 — Min Rating: aggregate_rating >= min_rating
+Step 5 — Ranking   : Sort by _score descending, cap at MAX_CANDIDATES (400)
 ```
 
 **Signature:**
@@ -297,40 +298,27 @@ def filter_restaurants(
 
 ---
 
-### 2.3 Smoke Test the Data Layer
+### 2.3 Unit & Integration Tests (`tests/test_phase2_filterer.py`)
 
-Run interactively to verify:
-```python
-# test_data.py (scratch file)
-from services.data_loader import DataLoader
-from services.filterer import filter_restaurants
-
-df = DataLoader.get_df()
-print(f"Total rows: {len(df)}")          # expect ~52,000
-print(df.columns.tolist())               # verify schema
-print(df["approx_cost(for two people)"].dtype)  # expect int64
-
-filtered = filter_restaurants(df, "Koramangala", "medium", "Italian", 3.5)
-print(f"Filtered rows: {len(filtered)}")  # expect 5–400
-print(filtered[["name", "location", "cuisines", "approx_cost(for two people)", "aggregate_rating"]].head())
+Run pytest suite:
+```bash
+python -m pytest -v tests/test_phase2_filterer.py
 ```
 
 ---
 
 ### Phase 2 — Acceptance Criteria
 
-| Check | Expected Result |
-|---|---|
-| `len(DataLoader.get_df())` | ≥ 50,000 |
-| Cost column dtype | `int64` (no commas, no NaN) |
-| Rating column dtype | `float64` (no "NEW", no NaN) |
-| `_score` column exists | `True` |
-| `.data_cache.csv` created | File exists after first run |
-| Filter: `location="Koramangala"` | All returned rows contain "koramangala" (case-insensitive) |
-| Filter: `budget="low"` | All `cost_for_two` values ≤ 300 |
-| Filter: `min_rating=4.0` | All `aggregate_rating` values ≥ 4.0 |
-| Filter cap | `len(result) <= 400` for any input |
-| Zero-result case | Returns empty DataFrame without crash |
+| Check | Expected Result | Status |
+|---|---|:---:|
+| Budget boundaries | Low: `max(cost) <= 300`, Med: `301 <= cost <= 700`, High: `min(cost) >= 701` | ✅ Verified |
+| Location substring | `location="Koramangala"` matches 100% case-insensitively | ✅ Verified |
+| City-wide fallback | `location="Bangalore"` searches city-wide without error | ✅ Verified |
+| Rating filter | `min_rating=4.0` returns only `aggregate_rating >= 4.0` | ✅ Verified |
+| Candidate cap & sort | Broad queries return `len <= 400` sorted descending by `_score` | ✅ Verified |
+| Zero-result safety | Over-constrained queries return empty DataFrame without crashing | ✅ Verified |
+| Input validation | Out-of-bounds ratings (>5.0 or <0.0) rejected with ValidationError | ✅ Verified |
+| Test suite | 10/10 pytest test cases passing | ✅ Verified |
 
 ---
 
