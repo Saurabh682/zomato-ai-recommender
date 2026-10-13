@@ -48,7 +48,12 @@ def _heuristic_top5(candidates: pd.DataFrame) -> list[dict]:
 def _parse_llm_json(raw: str) -> list[dict]:
     """Strip markdown fences and parse JSON (array or wrapped dict)."""
     cleaned = re.sub(r"```(?:json)?\s*", "", raw).replace("```", "").strip()
-    data = json.loads(cleaned)
+    try:
+        data = json.loads(cleaned)
+    except Exception as exc:
+        logger.warning("Failed to parse JSON from LLM: %s", exc)
+        return []
+
     if isinstance(data, list):
         return data
     if isinstance(data, dict):
@@ -58,12 +63,84 @@ def _parse_llm_json(raw: str) -> list[dict]:
     return []
 
 
-def _validate_names(recommendations: list[dict], candidate_names: set[str]) -> list[dict]:
-    """Drop any hallucinated restaurants not in candidate list."""
-    valid = [r for r in recommendations if r.get("name") in candidate_names]
+def _normalize_recommendations(
+    recommendations: list[dict],
+    candidates: pd.DataFrame
+) -> list[dict]:
+    """Validate against candidates and normalize fields into strict schema types."""
+    candidate_lookup = {}
+    for _, row in candidates.iterrows():
+        c_name = str(row["name"]).strip()
+        candidate_lookup[c_name.lower()] = {
+            "name": c_name,
+            "location": str(row.get("location", "")),
+            "cuisines": str(row.get("cuisines", "")),
+            "aggregate_rating": float(row.get("aggregate_rating", 0.0)),
+            COST_COL: int(row.get(COST_COL, 0)),
+            "online_order": str(row.get("online_order", "")).lower() == "yes",
+            "book_table": str(row.get("book_table", "")).lower() == "yes",
+        }
+
+    valid = []
+    for r in recommendations:
+        if not isinstance(r, dict):
+            continue
+        raw_name = str(r.get("name", "")).strip()
+        matched = candidate_lookup.get(raw_name.lower())
+        if not matched:
+            continue
+
+        # Correct name to exact candidate name
+        canonical_name = matched["name"]
+
+        # Parse numeric fields safely
+        try:
+            rating = float(r.get("rating", matched["aggregate_rating"]))
+        except (ValueError, TypeError):
+            rating = matched["aggregate_rating"]
+
+        try:
+            cost = int(r.get("cost_for_two", matched[COST_COL]))
+        except (ValueError, TypeError):
+            cost = matched[COST_COL]
+
+        # Parse boolean flags safely
+        online = r.get("online_order")
+        if online is None:
+            online = matched["online_order"]
+        elif isinstance(online, str):
+            online = online.lower() in ("yes", "true", "1")
+        else:
+            online = bool(online)
+
+        book = r.get("book_table")
+        if book is None:
+            book = matched["book_table"]
+        elif isinstance(book, str):
+            book = book.lower() in ("yes", "true", "1")
+        else:
+            book = bool(book)
+
+        explanation = str(
+            r.get("explanation")
+            or f"Highly recommended match with a {rating}/5 rating serving {matched['cuisines']} in {matched['location']}."
+        ).strip()
+
+        valid.append({
+            "name": canonical_name,
+            "location": str(r.get("location") or matched["location"]).strip(),
+            "cuisine": str(r.get("cuisine") or r.get("cuisines") or matched["cuisines"]).strip(),
+            "rating": rating,
+            "cost_for_two": cost,
+            "online_order": online,
+            "book_table": book,
+            "explanation": explanation,
+        })
+
     if len(valid) < len(recommendations):
         dropped = len(recommendations) - len(valid)
-        logger.warning("Dropped %d hallucinated recommendations", dropped)
+        logger.warning("Dropped %d unverified/hallucinated recommendations", dropped)
+
     return valid
 
 
@@ -120,11 +197,10 @@ def get_recommendations(
 
     unique_candidates = candidates.drop_duplicates(subset=["name"])
     prompt = build_prompt(unique_candidates[:50], location, budget, cuisine, min_rating, preferences)
-    candidate_names = set(unique_candidates["name"].tolist())
 
     # Try configured LLM providers: Groq first if key present, else Gemini
     providers = []
-    if GROQ_API_KEY and GROQ_API_KEY.startswith("gsk_"):
+    if GROQ_API_KEY and GROQ_API_KEY != "your_groq_api_key_here":
         providers.append(("Groq", _call_groq))
     if GEMINI_API_KEY and GEMINI_API_KEY != "your_gemini_api_key_here":
         providers.append(("Gemini", _call_gemini))
@@ -134,11 +210,11 @@ def get_recommendations(
             try:
                 logger.info("Calling %s LLM (attempt %d)...", provider_name, attempt + 1)
                 raw = provider_fn(prompt)
-                recommendations = _parse_llm_json(raw)
-                recommendations = _validate_names(recommendations, candidate_names)
+                parsed = _parse_llm_json(raw)
+                recommendations = _normalize_recommendations(parsed, unique_candidates)
 
                 if not recommendations:
-                    raise ValueError(f"No valid recommendations after hallucination check from {provider_name}")
+                    raise ValueError(f"No valid recommendations after normalization check from {provider_name}")
 
                 logger.info("%s returned %d valid recommendations", provider_name, len(recommendations))
                 return recommendations[:5], False

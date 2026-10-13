@@ -450,16 +450,16 @@ for i, r in enumerate(recs, 1):
 
 ### Phase 3 — Acceptance Criteria
 
-| Check | Expected Result |
-|---|---|
-| `build_prompt()` output | Contains "## User Preferences" + pipe-delimited restaurant rows |
-| LLM returns valid JSON | `isinstance(result, list)` → `True` |
-| All required keys present | `name, location, cuisine, rating, cost_for_two, online_order, book_table, explanation` |
-| `len(recommendations)` | `1 ≤ N ≤ 5` |
-| No hallucinated names | All returned names exist in `candidates["name"]` values |
-| Malformed JSON fallback | Mock LLM to return `"invalid json"` → heuristic top-5 returned |
-| Explanation length | Each explanation is 2–3 sentences (roughly 50–200 chars) |
-| Fallback flag | `is_fallback=True` when LLM fails both attempts |
+| Check | Expected Result | Status |
+|---|---|---|
+| `build_prompt()` output | Contains "## User Preferences" + pipe-delimited restaurant rows | Passed |
+| LLM returns valid JSON | `isinstance(result, list)` → `True` | Passed |
+| All required keys present | `name, location, cuisine, rating, cost_for_two, online_order, book_table, explanation` | Passed |
+| `len(recommendations)` | `1 ≤ N ≤ 5` | Passed |
+| No hallucinated names | All returned names exist in `candidates["name"]` values | Passed |
+| Malformed JSON fallback | Mock LLM to return `"invalid json"` → heuristic top-5 returned | Passed |
+| Explanation length | Each explanation is 2–3 sentences (roughly 50–200 chars) | Passed |
+| Fallback flag | `is_fallback=True` when LLM fails both attempts | Passed |
 
 ---
 
