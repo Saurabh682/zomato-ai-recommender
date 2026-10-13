@@ -378,48 +378,56 @@ Return ONLY the JSON array. No explanation outside the JSON.
 Returns: (list[dict], is_fallback: bool)
 ```
 
-**Retry flow:**
+**Provider Waterfall & Retry Flow:**
 ```
-Attempt 1:
-  build prompt → call Gemini → parse JSON → validate names
+Primary Provider (Groq - openai/gpt-oss-120b):
+  build prompt → call Groq → parse JSON → normalize & anti-hallucination check
   ✓ return (recommendations, False)
-  ✗ wait 2s → Attempt 2
-    ✓ return (recommendations, False)
-    ✗ return (_heuristic_top5(candidates), True)
+  ✗ on error/rate limit → Attempt 2 (or switch provider)
+
+Secondary Provider (Google Gemini - gemini-3.8-flash, if configured):
+  ✓ return (recommendations, False)
+  ✗ on error → Fallback to Heuristic
+
+Tertiary Fallback (Deterministic Heuristic):
+  return (_heuristic_top5(candidates), True)
 ```
 
 **B) `_parse_llm_json(raw: str) -> list[dict]`**
 ```python
-# Strip markdown fences
+# Strip markdown fences and parse safely without throwing JSONDecodeError
 cleaned = re.sub(r"```(?:json)?\s*", "", raw).replace("```", "").strip()
-return json.loads(cleaned)
+try:
+    data = json.loads(cleaned)
+    return data if isinstance(data, list) else data.get("recommendations", [])
+except Exception:
+    return []
 ```
 
-**C) `_validate_names(recommendations, candidate_names) -> list[dict]`**
+**C) `_normalize_recommendations(recommendations, candidates) -> list[dict]`**
 ```python
-# Drop hallucinated restaurant names
-return [r for r in recommendations if r.get("name") in candidate_names]
+# Discard hallucinated names (case-insensitive lookup against candidate DataFrame)
+# Coerce fields into strict schema types (rating: float, cost_for_two: int, etc.)
 ```
 
 **D) `_heuristic_top5(candidates) -> list[dict]`**
 ```python
-# Sort by _score, take top 5, attach canned explanation
+# Sort by _score, take top 5, attach canned explanation noting fallback
 top = candidates.nlargest(5, "_score")
-# Build dict with explanation noting AI unavailable
 ```
 
-**Gemini API call config:**
+**Groq API Call Config:**
 ```python
-client.interactions.create(
-    model=GEMINI_MODEL,                         # "gemini-3.8-flash"
-    system_instruction=SYSTEM_INSTRUCTION,
-    input=prompt,
-    config=types.GenerateContentConfig(
-        response_mime_type="application/json",  # force JSON mode
-        temperature=0.3,                        # low = deterministic
-        max_output_tokens=2048,
-    ),
-    store=False,                                # no interaction history needed
+client = Groq(api_key=GROQ_API_KEY)
+completion = client.chat.completions.create(
+    model=GROQ_MODEL,  # "openai/gpt-oss-120b"
+    messages=[
+        {"role": "system", "content": SYSTEM_INSTRUCTION},
+        {"role": "user", "content": prompt},
+    ],
+    temperature=0.3,
+    max_tokens=2048,
+    response_format={"type": "json_object"},
 )
 ```
 
@@ -465,7 +473,7 @@ for i, r in enumerate(recs, 1):
 
 ## Phase 4 — Backend API
 
-**Goal**: Expose a fully-functional FastAPI REST API that orchestrates the complete pipeline (DataLoader → Filterer → LLM Client) behind a single `POST /api/recommend` endpoint with proper validation, error handling, and CORS.
+**Goal**: Expose a fully-functional FastAPI REST API that orchestrates the complete end-to-end pipeline (DataLoader → Filterer → LLM Client powered by **Groq `openai/gpt-oss-120b`** as primary provider, with Gemini secondary fallback, and deterministic heuristic top-5 fallback) behind a single `POST /api/recommend` endpoint with proper validation, error handling, and CORS.
 
 **Reference**: Architecture §4 `schemas.py`, `recommend.py`, `main.py`, §6 API Contract
 
@@ -524,11 +532,25 @@ class RecommendationResponse(BaseModel):
 2. df = DataLoader.get_df()
 3. candidates = filter_restaurants(df, ...)
 4. if candidates.empty:
-     return RecommendationResponse(recommendations=[], message="No restaurants found...")
-5. recs, is_fallback = get_recommendations(candidates, ...)
+     return RecommendationResponse(recommendations=[], message="No restaurants found for the selected criteria.")
+5. recs, is_fallback = get_recommendations(
+       candidates,
+       location=prefs.location,
+       budget=prefs.budget,
+       cuisine=prefs.cuisine,
+       min_rating=prefs.min_rating,
+       preferences=prefs.preferences
+   )
+   # get_recommendations uses Groq (openai/gpt-oss-120b) as primary LLM.
+   # Falls back to Gemini or Heuristic top-5 on API errors / rate limits.
 6. if is_fallback:
      response.headers["X-LLM-Fallback"] = "true"
-7. Return RecommendationResponse with processing_time_ms
+7. Return RecommendationResponse(
+       recommendations=recs,
+       total_filtered=len(candidates),
+       processing_time_ms=elapsed_ms,
+       llm_fallback=is_fallback
+   )
 ```
 
 ---
@@ -553,7 +575,7 @@ app.include_router(recommend_router)
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "dataset_loaded": ..., "dataset_size": ...}
+    return {"status": "ok", "dataset_loaded": DataLoader.is_loaded(), "dataset_size": len(DataLoader.get_df())}
 ```
 
 ---
@@ -565,11 +587,17 @@ def health():
 uvicorn main:app --reload --port 8000
 ```
 
-**Manual test with curl:**
+**Manual test with curl (verifying Groq LLM inference):**
 ```bash
 curl -X POST http://localhost:8000/api/recommend \
   -H "Content-Type: application/json" \
   -d '{"location":"Koramangala","budget":"medium","cuisine":"Italian","min_rating":3.5}'
+```
+
+**Verify in backend logs:**
+```
+INFO: Calling Groq LLM (attempt 1)...
+INFO: Groq returned 5 valid recommendations
 ```
 
 **Interactive Swagger UI:** http://localhost:8000/docs
@@ -581,11 +609,12 @@ curl -X POST http://localhost:8000/api/recommend \
 | Check | Expected Result |
 |---|---|
 | `GET /health` | HTTP 200 · `{"status":"ok","dataset_loaded":true}` |
-| `POST /api/recommend` (valid) | HTTP 200 · 5 recommendations with all required fields |
+| `POST /api/recommend` (valid) | HTTP 200 · 5 recommendations generated by Groq LLM with explanations |
 | `POST /api/recommend` (no match) | HTTP 200 · `{"recommendations":[],"message":"No restaurants found..."}` |
 | `min_rating: 6.0` | HTTP 422 Unprocessable Entity |
 | Missing `location` field | HTTP 422 |
 | `processing_time_ms` | Present in every response, value < 15000 |
+| `llm_fallback` flag | `false` when Groq succeeds; `true` + `X-LLM-Fallback: true` header when fallback used |
 | Swagger UI `/docs` | All fields documented with correct types |
 | CORS header | `Access-Control-Allow-Origin: http://localhost:5173` on responses |
 
