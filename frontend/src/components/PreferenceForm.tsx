@@ -39,7 +39,7 @@ export function PreferenceForm({ onSubmit, isLoading }: Props) {
     <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-1">Find Your Perfect Restaurant</h2>
-        <p className="text-gray-500 text-sm">Powered by Gemini AI · Zomato Dataset</p>
+        <p className="text-gray-500 text-sm">Powered by Groq & Gemini AI · Zomato Dataset</p>
       </div>
 
       {/* Location */}

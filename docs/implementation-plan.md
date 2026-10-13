@@ -771,17 +771,17 @@ App
 
 ### Phase 5 — Acceptance Criteria
 
-| Check | Expected Result |
-|---|---|
-| `npm run build` exits 0 | TypeScript compiles, Vite bundles successfully |
-| Form renders | All 5 inputs + submit button visible at `localhost:5173` |
-| Empty location submit | Inline error shown; no network request fired |
-| Loading state | Spinner visible in submit button while request in flight |
-| Success state | 5 recommendation cards rendered with all fields |
-| Zero result state | Yellow warning box with API message |
-| Error state | Red error box with retry link |
-| Responsive layout | 1 col on mobile, 2 on tablet, 3 on desktop |
-| No console errors | Browser devtools shows no JS errors or undefined fields |
+| Check | Expected Result | Status |
+|---|---|---|
+| `npm run build` exits 0 | TypeScript compiles, Vite bundles successfully | Passed |
+| Form renders | All 5 inputs + submit button visible at `localhost:5173` | Passed |
+| Empty location submit | Inline error shown; no network request fired | Passed |
+| Loading state | Spinner visible in submit button while request in flight | Passed |
+| Success state | 5 recommendation cards rendered with all fields | Passed |
+| Zero result state | Yellow warning box with API message | Passed |
+| Error state | Red error box with retry link | Passed |
+| Responsive layout | 1 col on mobile, 2 on tablet, 3 on desktop | Passed |
+| No console errors | Browser devtools shows no JS errors or undefined fields | Passed |
 
 ---
 

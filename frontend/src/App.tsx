@@ -19,7 +19,7 @@ function AppContent() {
           </div>
           <div>
             <h1 className="text-xl font-black text-gray-900 leading-none">Zomato AI</h1>
-            <p className="text-xs text-gray-500">Powered by Gemini · 52k restaurants</p>
+            <p className="text-xs text-gray-500">Powered by Groq & Gemini · 52k restaurants</p>
           </div>
         </div>
       </header>
@@ -49,7 +49,7 @@ function AppContent() {
 
       {/* Footer */}
       <footer className="text-center py-8 text-xs text-gray-400">
-        Dataset: ManikaSaini/zomato-restaurant-recommendation (HuggingFace) · LLM: Gemini gemini-3.8-flash
+        Dataset: ManikaSaini/zomato-restaurant-recommendation (HuggingFace) · LLM: Groq (openai/gpt-oss-120b) & Gemini (gemini-3.8-flash)
       </footer>
     </div>
   );
