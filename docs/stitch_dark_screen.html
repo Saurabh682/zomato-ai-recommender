@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Zomato AI - Bangalore Food Discovery &amp; Recommendation Engine</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Script -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "primary-fixed-dim": "#ffb3b2",
+            "on-tertiary-fixed-variant": "#5516be",
+            "secondary-container": "#00a572",
+            "on-error": "#690005",
+            "primary": "#ffb3b2",
+            "on-tertiary-fixed": "#23005c",
+            "tertiary": "#d0bcff",
+            "secondary-fixed": "#6ffbbe",
+            "surface-variant": "#34343a",
+            "on-tertiary-container": "#340080",
+            "on-surface": "#e3e1e9",
+            "on-background": "#e3e1e9",
+            "inverse-on-surface": "#2f3036",
+            "outline-variant": "#5d3f3f",
+            "on-secondary": "#003824",
+            "on-primary-container": "#5b000f",
+            "error": "#ffb4ab",
+            "surface-tint": "#ffb3b2",
+            "error-container": "#93000a",
+            "primary-fixed": "#ffdad9",
+            "on-secondary-container": "#00311f",
+            "tertiary-container": "#a078ff",
+            "secondary": "#4edea3",
+            "secondary-fixed-dim": "#4edea3",
+            "on-surface-variant": "#e6bdbb",
+            "on-primary-fixed-variant": "#92001f",
+            "surface-bright": "#38393f",
+            "surface-container-high": "#292a2f",
+            "surface-container-lowest": "#0d0e13",
+            "on-tertiary": "#3c0091",
+            "on-primary-fixed": "#410008",
+            "tertiary-fixed": "#e9ddff",
+            "on-primary": "#680013",
+            "surface": "#121318",
+            "on-error-container": "#ffdad6",
+            "surface-container-highest": "#34343a",
+            "surface-container-low": "#1a1b21",
+            "on-secondary-fixed": "#002113",
+            "on-secondary-fixed-variant": "#005236",
+            "surface-dim": "#121318",
+            "inverse-primary": "#bf002b",
+            "background": "#121318",
+            "outline": "#ad8887",
+            "primary-container": "#ff525d",
+            "tertiary-fixed-dim": "#d0bcff",
+            "inverse-surface": "#e3e1e9",
+            "surface-container": "#1e1f25"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter-mobile": "0.75rem",
+            "space-xs": "0.25rem",
+            "margin": "2rem",
+            "space-md": "1rem",
+            "gutter": "1.25rem",
+            "space-xl": "2.5rem",
+            "space-sm": "0.5rem",
+            "space-lg": "1.5rem",
+            "margin-mobile": "1rem"
+          },
+          "fontFamily": {
+            "display-lg": ["Plus Jakarta Sans"],
+            "title-sm": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "body-md": ["Inter"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "label-xs": ["Plus Jakarta Sans"],
+            "display-lg-mobile": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "headline-xl": ["Plus Jakarta Sans"],
+            "body-lg": ["Inter"],
+            "body-sm": ["Inter"]
+          },
+          "fontSize": {
+            "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.03em", "fontWeight": "800" }],
+            "title-sm": ["16px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "label-md": ["13px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+            "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "label-xs": ["11px", { "lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+            "display-lg-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.025em", "fontWeight": "800" }],
+            "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "700" }],
+            "headline-xl": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+            "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .material-symbols-outlined.fill {
+      font-variation-settings: 'FILL' 1;
+    }
+    /* Glow utilities */
+    .glow-ember {
+      box-shadow: 0 0 20px rgba(255, 82, 93, 0.35), 0 4px 12px rgba(255, 94, 58, 0.2);
+    }
+    .glow-border {
+      border: 1px solid rgba(255, 82, 93, 0.4);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #121318;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #292a2f;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-[#090A0F] text-on-surface antialiased min-h-screen flex flex-col font-body-md selection:bg-primary-container selection:text-white">
+<!-- ==================== TOP NAVIGATION BAR ==================== -->
+<!-- Executing Shared Component: TopNavBar with JSON parameters -->
+<header class="w-full px-6 py-3.5 flex items-center justify-between border-b border-surface-container-highest/30 bg-surface-container-lowest/80 backdrop-blur-md docked full-width top-0 z-50 shadow-2xl shadow-surface-container-lowest/50 sticky">
+<!-- Left: Brand Identity & Subtitle -->
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FF334B] to-[#FF5E3A] flex items-center justify-center shadow-lg shadow-primary-container/30">
+<span class="material-symbols-outlined text-white text-2xl fill" data-icon="local_fire_department">local_fire_department</span>
+</div>
+<div>
+<div class="text-headline-md font-headline-md font-bold tracking-tight flex items-center gap-1.5 text-white">
+            Zomato AI
+            <span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+</div>
+<p class="text-label-xs font-label-xs text-on-surface-variant/70 tracking-wider uppercase">Intelligence Engine • Bengaluru</p>
+</div>
+</div>
+<!-- Navigation links (Desktop) -->
+<nav class="hidden lg:flex items-center gap-6 ml-4">
+<a class="text-primary font-semibold border-b-2 border-primary-container pb-1 text-label-md font-label-md" href="#">Discover</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors text-label-md font-label-md" href="#">Cuisines</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors text-label-md font-label-md" href="#">Curated Lists</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors text-label-md font-label-md flex items-center gap-1" href="#">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-ping"></span>
+          Live Map
+        </a>
+</nav>
+</div>
+<!-- Center Search Bar -->
+<div class="hidden md:flex flex-1 max-w-xl mx-8">
+<div class="relative w-full group">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-on-surface-variant group-focus-within:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="search">search</span>
+</div>
+<input class="w-full bg-[#141620] border border-[#232738] rounded-full py-2 pl-10 pr-16 text-body-md font-body-md text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-primary-container focus:ring-2 focus:ring-primary-container/20 transition-all shadow-inner" type="text" value="Best butter garlic crab near Indiranagar..."/>
+<div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+<kbd class="px-2 py-0.5 text-label-xs font-label-xs rounded bg-surface-container-high text-on-surface-variant/80 border border-surface-variant/50">⌘K</kbd>
+</div>
+</div>
+</div>
+<!-- Right: Trailing Actions -->
+<div class="flex items-center gap-3">
+<!-- Groq Engine Active Badge -->
+<div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container-low border border-secondary/30 text-secondary text-label-md font-label-md shadow-sm">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+</span>
+<span class="text-white font-medium">⚡ Groq Engine Active</span>
+</div>
+<!-- Icon Actions -->
+<button aria-label="Notifications" class="w-9 h-9 rounded-full bg-surface-container-high/60 flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all">
+<span class="material-symbols-outlined text-xl" data-icon="notifications">notifications</span>
+</button>
+<button aria-label="Location" class="w-9 h-9 rounded-full bg-surface-container-high/60 flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all">
+<span class="material-symbols-outlined text-xl text-primary" data-icon="location_on">location_on</span>
+</button>
+<!-- Profile Avatar -->
+<div class="flex items-center gap-2 pl-2 border-l border-[#232738]">
+<div class="relative">
+<img class="w-8 h-8 rounded-full object-cover border-2 border-primary-container" data-alt="Close up portrait photograph of an urban food enthusiast wearing modern dark cyberwear in neon-lit Bangalore street, cinematic lighting with vivid red and violet glow highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVCXoy1Dscp395-am7HdqrRFEMvW9L8lPUPZQNab9dJW26qK9JGW74RAEvot0Cs_pBNmZFAwVi7F72n-DPUdBbN_7RkzPTnVdUuo67C9Fdliug3HOd3ckdvhCqBDehSAIghUrWbIV_cWMXG83AyIOCY51KYEW_sDBOcQ1htCvtAffA11PbtgTfDZoi0KE_CGhVjhC85lTw03OqZ6YP4goZiDEsfDXy8EyPeunNJsJzKP2aff-ocuEswEPeG2GmBsw760HieNoYQgQ"/>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-secondary border-2 border-[#090A0F]"></span>
+</div>
+</div>
+</div>
+</header>
+<!-- ==================== MAIN DASHBOARD WORKSPACE ==================== -->
+<div class="flex-1 flex overflow-hidden">
+<!-- ==================== LEFT COLUMN: SIDE PANEL & FILTERS ==================== -->
+<aside class="w-80 md:w-96 flex-shrink-0 bg-[#0E1017] border-r border-[#232738] p-5 overflow-y-auto custom-scrollbar flex flex-col justify-between hidden md:flex">
+<div class="space-y-6">
+<!-- Panel Header -->
+<div class="flex items-center justify-between pb-3 border-b border-[#232738]/60">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container" data-icon="tune">tune</span>
+<h2 class="text-title-sm font-title-sm font-bold text-white">Discovery Preferences</h2>
+</div>
+<button class="text-label-xs font-label-xs text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="refresh">refresh</span>
+            Reset
+          </button>
+</div>
+<!-- Location Selector -->
+<div>
+<label class="text-label-xs font-label-xs uppercase tracking-wider text-on-surface-variant font-bold block mb-2">Micro-Location / Hub</label>
+<div class="relative mb-2.5">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-lg" data-icon="near_me">near_me</span>
+<input class="w-full bg-[#141620] border border-[#232738] rounded-xl pl-9 pr-3 py-2 text-body-sm font-body-sm text-on-surface focus:outline-none focus:border-primary-container" type="text" value="Koramangala, Bengaluru"/>
+</div>
+<!-- Quick Select Location Pills -->
+<div class="flex flex-wrap gap-1.5">
+<button class="px-3 py-1 rounded-full text-label-xs font-label-xs font-bold bg-primary-container/20 text-white border border-primary-container shadow-sm glow-border">Koramangala</button>
+<button class="px-3 py-1 rounded-full text-label-xs font-label-xs font-medium bg-[#141620] text-on-surface-variant border border-[#232738] hover:border-surface-variant">Indiranagar</button>
+<button class="px-3 py-1 rounded-full text-label-xs font-label-xs font-medium bg-[#141620] text-on-surface-variant border border-[#232738] hover:border-surface-variant">HSR Layout</button>
+<button class="px-3 py-1 rounded-full text-label-xs font-label-xs font-medium bg-[#141620] text-on-surface-variant border border-[#232738] hover:border-surface-variant">Whitefield</button>
+<button class="px-3 py-1 rounded-full text-label-xs font-label-xs font-medium bg-[#141620] text-on-surface-variant border border-[#232738] hover:border-surface-variant">BTM</button>
+</div>
+</div>
+<!-- Budget 3-Tier Segmented Control -->
+<div>
+<label class="text-label-xs font-label-xs uppercase tracking-wider text-on-surface-variant font-bold block mb-2">Spend Ceiling (For Two)</label>
+<div class="grid grid-cols-3 gap-1.5 p-1 bg-[#141620] rounded-xl border border-[#232738]">
+<button class="py-2 px-1 text-center rounded-lg text-label-xs font-label-xs font-medium text-on-surface-variant hover:text-white transition-all">
+              ₹ Low<br/><span class="opacity-60 font-normal">≤ ₹500</span>
+</button>
+<button class="py-2 px-1 text-center rounded-lg text-label-xs font-label-xs font-bold text-white bg-gradient-to-r from-[#FF334B] to-[#FF5E3A] shadow-md shadow-primary-container/30">
+              ₹₹ Mid<br/><span class="opacity-90 font-medium">₹500-1500</span>
+</button>
+<button class="py-2 px-1 text-center rounded-lg text-label-xs font-label-xs font-medium text-on-surface-variant hover:text-white transition-all">
+              ₹₹₹ Fine<br/><span class="opacity-60 font-normal">₹1500+</span>
+</button>
+</div>
+</div>
+<!-- Cuisine Multi-Pill Selection -->
+<div>
+<label class="text-label-xs font-label-xs uppercase tracking-wider text-on-surface-variant font-bold block mb-2">Target Gastronomy &amp; Vibes</label>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-3 py-1.5 rounded-full text-label-xs font-label-xs bg-gradient-to-r from-[#FF334B]/20 to-[#FF5E3A]/20 border border-primary-container/60 text-white font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-primary" data-icon="check">check</span> Italian
+            </span>
+<span class="px-3 py-1.5 rounded-full text-label-xs font-label-xs bg-gradient-to-r from-[#FF334B]/20 to-[#FF5E3A]/20 border border-primary-container/60 text-white font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-primary" data-icon="check">check</span> Craft Brews
+            </span>
+<span class="px-3 py-1.5 rounded-full text-label-xs font-label-xs bg-[#141620] border border-[#232738] text-on-surface-variant hover:border-surface-variant cursor-pointer">North Indian</span>
+<span class="px-3 py-1.5 rounded-full text-label-xs font-label-xs bg-[#141620] border border-[#232738] text-on-surface-variant hover:border-surface-variant cursor-pointer">Artisan Cafe</span>
+<span class="px-3 py-1.5 rounded-full text-label-xs font-label-xs bg-[#141620] border border-[#232738] text-on-surface-variant hover:border-surface-variant cursor-pointer">Biryani</span>
+<span class="px-3 py-1.5 rounded-full text-label-xs font-label-xs bg-[#141620] border border-[#232738] text-on-surface-variant hover:border-surface-variant cursor-pointer">Pan-Asian</span>
+</div>
+</div>
+<!-- Minimum Rating Slider / Level -->
+<div>
+<div class="flex justify-between items-center mb-1.5">
+<label class="text-label-xs font-label-xs uppercase tracking-wider text-on-surface-variant font-bold">Minimum Critic / User Rating</label>
+<span class="text-label-md font-label-md font-bold text-amber-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm fill text-amber-400" data-icon="star">star</span> 4.2+ ★
+            </span>
+</div>
+<div class="w-full bg-[#141620] h-2 rounded-full overflow-hidden border border-[#232738] p-0.5">
+<div class="bg-gradient-to-r from-amber-500 to-[#FF5E3A] h-full rounded-full" style="width: 76%;"></div>
+</div>
+<div class="flex justify-between text-[10px] text-on-surface-variant/60 mt-1 font-mono">
+<span>3.5</span>
+<span>4.0</span>
+<span class="text-primary font-bold">4.2</span>
+<span>4.5</span>
+<span>4.8</span>
+</div>
+</div>
+<!-- Ambience & Natural Language Prompt -->
+<div>
+<label class="text-label-xs font-label-xs uppercase tracking-wider text-on-surface-variant font-bold flex items-center justify-between mb-1.5">
+<span>Contextual Query / Vibes</span>
+<span class="text-primary text-[10px] font-mono">Tokens: 38/200</span>
+</label>
+<textarea class="w-full bg-[#141620] border border-[#232738] rounded-xl p-3 text-body-sm font-body-sm text-on-surface placeholder-on-surface-variant/50 focus:outline-none focus:border-primary-container leading-relaxed" rows="3">Rooftop brewery or aesthetic cafe with great pasta, wood-fired pizza, and craft beer for a weekend date night.</textarea>
+</div>
+</div>
+<!-- Generate AI Recs Primary CTA -->
+<div class="pt-6 border-t border-[#232738]/60 mt-4">
+<button class="w-full py-3.5 px-4 rounded-full bg-gradient-to-r from-[#FF334B] to-[#FF5E3A] hover:brightness-110 active:scale-[0.98] text-white font-headline-md text-title-sm font-semibold flex items-center justify-center gap-2 glow-ember transition-all">
+<span class="material-symbols-outlined text-xl" data-icon="bolt">bolt</span>
+          Generate AI Recommendations
+        </button>
+<div class="flex items-center justify-center gap-2 mt-2 text-on-surface-variant/70 text-label-xs font-label-xs">
+<span>Engine: Groq LPU™ Mixtral 8x7B</span>
+<span>•</span>
+<span class="text-secondary font-mono">~640ms</span>
+</div>
+</div>
+</aside>
+<!-- ==================== MAIN CONTENT: AI GOURMET PICKS ==================== -->
+<main class="flex-1 overflow-y-auto custom-scrollbar p-5 md:p-8 space-y-6">
+<!-- Header Row with Location and Stats -->
+<div class="space-y-4">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+<div>
+<div class="flex items-center gap-2.5">
+<h1 class="text-headline-xl font-headline-xl text-white tracking-tight">AI Gastronomy Picks for Bangalore</h1>
+<span class="px-2.5 py-0.5 rounded-full text-label-xs font-label-xs font-bold bg-primary-container/15 text-primary border border-primary-container/30">Live Synthesized</span>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-base" data-icon="location_on">location_on</span>
+              Optimized for <strong class="text-white font-semibold">Koramangala &amp; Indiranagar</strong> based on multi-factor palate embeddings.
+            </p>
+</div>
+<!-- Sort / Quick Pills -->
+<div class="flex items-center gap-2 self-start md:self-auto">
+<button class="px-3 py-1.5 rounded-full bg-[#141620] border border-primary-container text-primary font-semibold text-label-xs font-label-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="auto_awesome">auto_awesome</span> Highest Match %
+            </button>
+<button class="px-3 py-1.5 rounded-full bg-[#141620] border border-[#232738] text-on-surface-variant hover:text-white text-label-xs font-label-xs">
+              Fastest Delivery
+            </button>
+<button class="px-3 py-1.5 rounded-full bg-[#141620] border border-[#232738] text-on-surface-variant hover:text-white text-label-xs font-label-xs">
+              Most Romantic
+            </button>
+</div>
+</div>
+<!-- Live Metric Ticker Bar -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 p-3.5 rounded-2xl bg-[#141620]/90 border border-[#232738] text-body-sm font-body-sm">
+<div class="flex items-center gap-2.5 px-2">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-lg" data-icon="analytics">analytics</span>
+</div>
+<div>
+<p class="text-label-xs font-label-xs text-on-surface-variant/70 uppercase">Corpus Size</p>
+<p class="text-title-sm font-title-sm font-bold text-white">294 Restaurants</p>
+</div>
+</div>
+<div class="flex items-center gap-2.5 px-2">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-lg" data-icon="speed">speed</span>
+</div>
+<div>
+<p class="text-label-xs font-label-xs text-on-surface-variant/70 uppercase">Inference Latency</p>
+<p class="text-title-sm font-title-sm font-bold text-secondary font-mono">640ms (Groq LPU)</p>
+</div>
+</div>
+<div class="flex items-center gap-2.5 px-2">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-lg" data-icon="neurology">neurology</span>
+</div>
+<div>
+<p class="text-label-xs font-label-xs text-on-surface-variant/70 uppercase">Semantic Model</p>
+<p class="text-title-sm font-title-sm font-bold text-white">Mixtral 8x7B v2</p>
+</div>
+</div>
+<div class="flex items-center gap-2.5 px-2">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-amber-400">
+<span class="material-symbols-outlined text-lg" data-icon="hub">hub</span>
+</div>
+<div>
+<p class="text-label-xs font-label-xs text-on-surface-variant/70 uppercase">Knowledge Graph</p>
+<p class="text-title-sm font-title-sm font-bold text-white">BLR Palate v3.2</p>
+</div>
+</div>
+</div>
+</div>
+<!-- ==================== RECOMMENDATION CARDS CONTAINER ==================== -->
+<div class="space-y-5">
+<!-- CARD 1: TOIT (GOLD RANK #1) -->
+<article class="relative rounded-2xl bg-[#141620] border border-[#FF334B]/40 p-5 md:p-6 shadow-2xl hover:border-[#FF334B] transition-all group overflow-hidden">
+<div class="absolute -top-12 -right-12 w-48 h-48 bg-primary-container/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="flex flex-col lg:flex-row gap-6">
+<!-- Left Image & Visual Scrim -->
+<div class="lg:w-64 h-52 lg:h-auto rounded-xl overflow-hidden relative flex-shrink-0">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Artisanal craft beer glasses and wood fired gourmet pizza on a rustic wooden table in a bustling, warmly lit brewpub in Bangalore with exposed brick walls and atmospheric evening amber lights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUnqlat41fpsyUrAUDg7l9ihE6lK00mos6oR_fXQbrY4Gis_OY2jg6WgGXmF8zoBT5M9Qf0imrG5cp8FrQS3_EUtyThPvky6PndSJKfRnJiI1uSsuW8gP76KAgHSSxQfJdjQOyn-eUwa9Q6MVEFbg5kPsUBCLnMQSuqJBsF8COYHhCNBo4amXgrz6HWTUJ_YccLWBCgGIMI43kvQCIu3OySvPyAq_6MfwJ2NLEDEdhKya6Nln24DcUw2VrW0tsdetIwNy4x_HHaIU"/>
+<div class="absolute inset-0 bg-gradient-to-t from-[#141620] via-transparent to-black/40"></div>
+<!-- Match score badge -->
+<div class="absolute top-3 left-3 bg-amber-500/90 text-black font-extrabold px-2.5 py-1 rounded-full text-label-xs font-label-xs flex items-center gap-1 shadow-lg">
+<span class="material-symbols-outlined text-xs fill" data-icon="workspace_premium">workspace_premium</span>
+                #1 Top Match • 98%
+              </div>
+<!-- Distance chip -->
+<div class="absolute bottom-3 left-3 bg-[#090A0F]/80 backdrop-blur-md px-2.5 py-0.5 rounded-md text-label-xs font-label-xs text-on-surface border border-[#232738]">
+                Indiranagar • 3.2 km
+              </div>
+</div>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col justify-between space-y-4">
+<div>
+<!-- Top metadata & badges -->
+<div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+<div class="flex items-center gap-2">
+<span class="px-2.5 py-0.5 rounded-full text-label-xs font-label-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Online Order
+                    </span>
+<span class="px-2.5 py-0.5 rounded-full text-label-xs font-label-xs bg-purple-500/15 text-purple-300 border border-purple-500/30 font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="table_restaurant">table_restaurant</span> Book Table
+                    </span>
+</div>
+<div class="text-label-md font-label-md text-on-surface-variant font-mono">
+                    ₹1,800 for two
+                  </div>
+</div>
+<!-- Title & Rating -->
+<div class="flex items-baseline justify-between gap-4">
+<h3 class="text-headline-lg font-headline-lg font-bold text-white group-hover:text-primary transition-colors">
+                    Toit Brewpub &amp; Eatery
+                  </h3>
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#1B1E2C] border border-[#232738]">
+<span class="material-symbols-outlined text-sm fill text-amber-400" data-icon="star">star</span>
+<span class="font-bold text-white text-title-sm">4.8</span>
+<span class="text-on-surface-variant/60 text-label-xs">(18.4k)</span>
+</div>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1">
+                  Craft Brewery, Wood-fired Pizza, Continental • 100ft Rd, Indiranagar
+                </p>
+</div>
+<!-- Frosted Glass AI Explanation Box -->
+<div class="p-3.5 rounded-xl bg-[#141620]/60 border border-white/10 backdrop-blur-md relative overflow-hidden">
+<div class="flex items-start gap-2.5">
+<div class="w-6 h-6 rounded-md bg-gradient-to-tr from-[#FF334B] to-[#FF5E3A] flex items-center justify-center text-white flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-sm fill" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div>
+<span class="text-label-xs font-label-xs uppercase font-bold tracking-wide text-primary block mb-0.5">AI Affinity Reasoning</span>
+<p class="text-body-sm font-body-sm text-on-surface leading-relaxed">
+                      Matches your rooftop &amp; craft beer request with high confidence. Toit's signature <strong class="text-white font-semibold">Tint-In-Wit</strong> wheat beer paired with their <strong class="text-white font-semibold">Smoky Pork/Sundried Tomato pizza</strong> consistently scores 94% positive sentiment in Bangalore foodie discussions.
+                    </p>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-wrap items-center gap-3 pt-2">
+<button class="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#FF334B] to-[#FF5E3A] text-white font-semibold text-label-md font-label-md glow-ember hover:opacity-95 active:scale-95 transition-all flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base" data-icon="restaurant_menu">restaurant_menu</span>
+                  View Menu &amp; Order
+                </button>
+<button class="px-5 py-2.5 rounded-full bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/35 font-semibold text-label-md font-label-md active:scale-95 transition-all flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base" data-icon="event_seat">event_seat</span>
+                  Reserve Table (Instant)
+                </button>
+<button aria-label="Bookmark" class="ml-auto w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-white border border-[#232738]">
+<span class="material-symbols-outlined text-lg" data-icon="bookmark_border">bookmark_border</span>
+</button>
+</div>
+</div>
+</div>
+</article>
+<!-- CARD 2: CHIANTI (SILVER RANK #2) -->
+<article class="rounded-2xl bg-[#141620] border border-[#232738] p-5 md:p-6 shadow-xl hover:border-surface-variant transition-all group overflow-hidden">
+<div class="flex flex-col lg:flex-row gap-6">
+<!-- Left Image & Visual Scrim -->
+<div class="lg:w-64 h-52 lg:h-auto rounded-xl overflow-hidden relative flex-shrink-0">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Intimate candlelit Italian dining scene with plates of handmade stuffed ravioli, crusty artisan bread, olive oil dipping sauce, and glasses of red Chianti wine in a cozy dimly lit courtyard" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOjkq6-vZbmNzk_ULpLWMNw5tmc8oz5WDfpkU2ZIlRbbnquOadfHNRVZsOJBKgfRZ1oj2a7ddvAJaTF84wn0jLtCAyuC-L9Posh7ut0HY4PboJ7fHdmtX4BIKdAJ7s6gE5fac-YHlS-72bwNbeS7dCDeXj_krkxPF1_PxqYvylmPtzH23JKyBpNjK2T6jv-a9VeuP1AVsPx5G66xkFIprI6M4RkU6UBf5rzN7gySZgN4Y2wOt7apbkJ7cwS3nYcR4V9c_g5YQ0dL8"/>
+<div class="absolute inset-0 bg-gradient-to-t from-[#141620] via-transparent to-black/40"></div>
+<!-- Silver rank badge -->
+<div class="absolute top-3 left-3 bg-slate-300 text-black font-extrabold px-2.5 py-1 rounded-full text-label-xs font-label-xs flex items-center gap-1 shadow-lg">
+<span class="material-symbols-outlined text-xs fill" data-icon="verified">verified</span>
+                #2 High Affinity • 95%
+              </div>
+<div class="absolute bottom-3 left-3 bg-[#090A0F]/80 backdrop-blur-md px-2.5 py-0.5 rounded-md text-label-xs font-label-xs text-on-surface border border-[#232738]">
+                Koramangala • 1.1 km
+              </div>
+</div>
+<!-- Content Area -->
+<div class="flex-1 flex flex-col justify-between space-y-4">
+<div>
+<div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+<div class="flex items-center gap-2">
+<span class="px-2.5 py-0.5 rounded-full text-label-xs font-label-xs bg-purple-500/15 text-purple-300 border border-purple-500/30 font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="table_restaurant">table_restaurant</span> Book Table
+                    </span>
+<span class="px-2.5 py-0.5 rounded-full text-label-xs font-label-xs bg-surface-container-high text-on-surface-variant border border-[#232738]">
+                      Dine-in Only
+                    </span>
+</div>
+<div class="text-label-md font-label-md text-on-surface-variant font-mono">
+                    ₹2,000 for two
+                  </div>
+</div>
+<div class="flex items-baseline justify-between gap-4">
+<h3 class="text-headline-lg font-headline-lg font-bold text-white group-hover:text-primary transition-colors">
+                    Chianti Italian Restaurant &amp; Wine Bar
+                  </h3>
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#1B1E2C] border border-[#232738]">
+<span class="material-symbols-outlined text-sm fill text-amber-400" data-icon="star">star</span>
+<span class="font-bold text-white text-title-sm">4.6</span>
+<span class="text-on-surface-variant/60 text-label-xs">(9.2k)</span>
+</div>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1">
+                  Authentic Italian, Handmade Pasta, Wine • 5th Block, Koramangala
+                </p>
+</div>
+<!-- Frosted Glass AI Explanation Box -->
+<div class="p-3.5 rounded-xl bg-[#141620]/60 border border-white/10 backdrop-blur-md">
+<div class="flex items-start gap-2.5">
+<div class="w-6 h-6 rounded-md bg-purple-500/30 border border-purple-400/40 flex items-center justify-center text-purple-300 flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-sm fill" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div>
+<span class="text-label-xs font-label-xs uppercase font-bold tracking-wide text-purple-300 block mb-0.5">AI Affinity Reasoning</span>
+<p class="text-body-sm font-body-sm text-on-surface leading-relaxed">
+                      Ideal for intimate date nights. Known for live bread-dipping antipasto platter and handmade <strong class="text-white font-semibold">Ravioli di Zucca</strong>. 92% of reviews highlight the romantic candle-lit indoor courtyard setting.
+                    </p>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex flex-wrap items-center gap-3 pt-2">
+<button class="px-5 py-2.5 rounded-full bg-purple-600 hover:bg-purple-500 text-white font-semibold text-label-md font-label-md shadow-lg shadow-purple-600/30 active:scale-95 transition-all flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base" data-icon="event_seat">event_seat</span>
+                  Reserve Table
+                </button>
+<button class="px-5 py-2.5 rounded-full bg-[#1B1E2C] hover:bg-surface-container-high text-on-surface border border-[#232738] font-semibold text-label-md font-label-md active:scale-95 transition-all">
+                  Preview Tasting Menu
+                </button>
+<button aria-label="Bookmark" class="ml-auto w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-white border border-[#232738]">
+<span class="material-symbols-outlined text-lg" data-icon="bookmark_border">bookmark_border</span>
+</button>
+</div>
+</div>
+</div>
+</article>
+<!-- CARD 3: MEGHANA FOODS (BRONZE RANK #3) -->
+<article class="rounded-2xl bg-[#141620] border border-[#232738] p-5 md:p-6 shadow-xl hover:border-surface-variant transition-all group overflow-hidden">
+<div class="flex flex-col lg:flex-row gap-6">
+<!-- Left Image -->
+<div class="lg:w-64 h-52 lg:h-auto rounded-xl overflow-hidden relative flex-shrink-0">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Steaming aromatic Andhra chicken biryani garnished with fried onions, coriander leaves, boiled egg, served on traditional ceramic plate with spicy salan and raita in rich dark lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsvAGZvFG5cHPgdLPl3_8ositra6BFLYjEMqz8nn2cYOmuOe7kbrICeHtw1ca4tR4qCmf21yAI9pFb2KlcwIOQSoSiTU3L_x-EN0hznhydjTHapxPrPbGRg-6oTvYuUg0jsoCQu1wZHGvq4GR4QSrnYmQ1s6j65Xo36rHpDSvYfzqC3hMk7EHFp08_c-Iz086NBWRw-8A6JK2o5qLrtYKa8ljlRkgx1jssKOFFkxZ3gomWnh6VSPlAPqskzy7Vl3QOlbBvw4LC4eM"/>
+<div class="absolute inset-0 bg-gradient-to-t from-[#141620] via-transparent to-black/40"></div>
+<!-- Bronze rank badge -->
+<div class="absolute top-3 left-3 bg-amber-700 text-white font-extrabold px-2.5 py-1 rounded-full text-label-xs font-label-xs flex items-center gap-1 shadow-lg">
+<span class="material-symbols-outlined text-xs fill" data-icon="military_tech">military_tech</span>
+                #3 Popular Pick • 92%
+              </div>
+<div class="absolute bottom-3 left-3 bg-[#090A0F]/80 backdrop-blur-md px-2.5 py-0.5 rounded-md text-label-xs font-label-xs text-on-surface border border-[#232738]">
+                Koramangala • 0.8 km
+              </div>
+</div>
+<!-- Content Area -->
+<div class="flex-1 flex flex-col justify-between space-y-4">
+<div>
+<div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+<div class="flex items-center gap-2">
+<span class="px-2.5 py-0.5 rounded-full text-label-xs font-label-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="electric_moped">electric_moped</span> Online Order
+                    </span>
+<span class="px-2.5 py-0.5 rounded-full text-label-xs font-label-xs bg-secondary/10 text-secondary border border-secondary/30 font-mono">
+                      Fast 25m
+                    </span>
+</div>
+<div class="text-label-md font-label-md text-on-surface-variant font-mono">
+                    ₹700 for two
+                  </div>
+</div>
+<div class="flex items-baseline justify-between gap-4">
+<h3 class="text-headline-lg font-headline-lg font-bold text-white group-hover:text-primary transition-colors">
+                    Meghana Foods
+                  </h3>
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#1B1E2C] border border-[#232738]">
+<span class="material-symbols-outlined text-sm fill text-amber-400" data-icon="star">star</span>
+<span class="font-bold text-white text-title-sm">4.7</span>
+<span class="text-on-surface-variant/60 text-label-xs">(34.1k)</span>
+</div>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1">
+                  Biryani, Andhra, Spicy Seafood • 1st Block, Koramangala
+                </p>
+</div>
+<!-- AI Rationale -->
+<div class="p-3.5 rounded-xl bg-[#141620]/60 border border-white/10 backdrop-blur-md">
+<div class="flex items-start gap-2.5">
+<div class="w-6 h-6 rounded-md bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-sm fill" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div>
+<span class="text-label-xs font-label-xs uppercase font-bold tracking-wide text-emerald-400 block mb-0.5">AI Affinity Reasoning</span>
+<p class="text-body-sm font-body-sm text-on-surface leading-relaxed">
+                      High-velocity local legend. Flagship <strong class="text-white font-semibold">Special Chicken Biryani</strong> with authentic Andhra spices. Perfect high-flavor comfort alternative with unmatched 25-minute delivery time.
+                    </p>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex flex-wrap items-center gap-3 pt-2">
+<button class="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#FF334B] to-[#FF5E3A] text-white font-semibold text-label-md font-label-md glow-ember active:scale-95 transition-all">
+                  Order Now (20% off with Gold)
+                </button>
+<button class="px-5 py-2.5 rounded-full bg-[#1B1E2C] hover:bg-surface-container-high text-on-surface border border-[#232738] font-semibold text-label-md font-label-md active:scale-95 transition-all">
+                  View Top 10 Dishes
+                </button>
+<button aria-label="Bookmark" class="ml-auto w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-white border border-[#232738]">
+<span class="material-symbols-outlined text-lg" data-icon="bookmark_border">bookmark_border</span>
+</button>
+</div>
+</div>
+</div>
+</article>
+<!-- CARD 4: BURMA BURMA (#4 TRENDING) -->
+<article class="rounded-2xl bg-[#141620] border border-[#232738] p-5 md:p-6 shadow-xl hover:border-surface-variant transition-all group overflow-hidden">
+<div class="flex flex-col lg:flex-row gap-6">
+<!-- Left Image -->
+<div class="lg:w-64 h-52 lg:h-auto rounded-xl overflow-hidden relative flex-shrink-0">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Authentic Burmese Khao Suey noodles in rich golden coconut curry broth topped with crispy noodles, spring onion, chili oil, and artistic vegetarian side dishes in an upscale Asian restaurant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDHme3NxCueXH-WlBhqaW5OP5M8Oy73zpr_0rbdgOZhyoICT-rKYA0gcYK8Z_JDJzbmRnMPjfmmHM_gwoAC06QRWCFfw2gVa4cjSIeJ_vKJxHTuDk711XFKi2Dq-om2q35AdVx7mEIZoT0oPMjjb1AolRE-e33jUsE_V9W7VHb5SxezO8xX5Q8kzU2123LIc0joaiCWxyb8NTcTmS9-rzvK3PjNNFt6DZuDt5AH94LJfLnrFKyVqhBapWgaJXGIdHWkTJwNaN4mufU"/>
+<div class="absolute inset-0 bg-gradient-to-t from-[#141620] via-transparent to-black/40"></div>
+<div class="absolute top-3 left-3 bg-[#1B1E2C] text-on-surface border border-surface-variant font-bold px-2.5 py-1 rounded-full text-label-xs font-label-xs flex items-center gap-1 shadow-lg">
+<span class="material-symbols-outlined text-xs text-primary" data-icon="trending_up">trending_up</span>
+                #4 Trending • 89%
+              </div>
+<div class="absolute bottom-3 left-3 bg-[#090A0F]/80 backdrop-blur-md px-2.5 py-0.5 rounded-md text-label-xs font-label-xs text-on-surface border border-[#232738]">
+                Indiranagar • 3.8 km
+              </div>
+</div>
+<!-- Content Area -->
+<div class="flex-1 flex flex-col justify-between space-y-4">
+<div>
+<div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+<div class="flex items-center gap-2">
+<span class="px-2.5 py-0.5 rounded-full text-label-xs font-label-xs bg-purple-500/15 text-purple-300 border border-purple-500/30 font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="table_restaurant">table_restaurant</span> Book Table
+                    </span>
+<span class="px-2.5 py-0.5 rounded-full text-label-xs font-label-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold">
+                      Online Order
+                    </span>
+</div>
+<div class="text-label-md font-label-md text-on-surface-variant font-mono">
+                    ₹1,500 for two
+                  </div>
+</div>
+<div class="flex items-baseline justify-between gap-4">
+<h3 class="text-headline-lg font-headline-lg font-bold text-white group-hover:text-primary transition-colors">
+                    Burma Burma Restaurant &amp; Tea Room
+                  </h3>
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#1B1E2C] border border-[#232738]">
+<span class="material-symbols-outlined text-sm fill text-amber-400" data-icon="star">star</span>
+<span class="font-bold text-white text-title-sm">4.7</span>
+<span class="text-on-surface-variant/60 text-label-xs">(7.8k)</span>
+</div>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1">
+                  Pan-Asian, Burmese, Artisanal Teas • 12th Main, Indiranagar
+                </p>
+</div>
+<!-- AI Rationale -->
+<div class="p-3.5 rounded-xl bg-[#141620]/60 border border-white/10 backdrop-blur-md">
+<div class="flex items-start gap-2.5">
+<div class="w-6 h-6 rounded-md bg-primary-container/20 border border-primary-container/40 flex items-center justify-center text-primary flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-sm fill" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div>
+<span class="text-label-xs font-label-xs uppercase font-bold tracking-wide text-primary block mb-0.5">AI Affinity Reasoning</span>
+<p class="text-body-sm font-body-sm text-on-surface leading-relaxed">
+                      Zero-alcohol aesthetic sanctuary with signature <strong class="text-white font-semibold">Tea Leaf Salad</strong> and <strong class="text-white font-semibold">Khao Suey</strong>. Calming bamboo ambiance and unique tea bar tailored for tranquil weekend conversations.
+                    </p>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex flex-wrap items-center gap-3 pt-2">
+<button class="px-5 py-2.5 rounded-full bg-purple-600/90 hover:bg-purple-600 text-white font-semibold text-label-md font-label-md active:scale-95 transition-all">
+                  Book Experience
+                </button>
+<button class="px-5 py-2.5 rounded-full bg-[#1B1E2C] hover:bg-surface-container-high text-on-surface border border-[#232738] font-semibold text-label-md font-label-md active:scale-95 transition-all">
+                  Order Delivery
+                </button>
+<button aria-label="Bookmark" class="ml-auto w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-white border border-[#232738]">
+<span class="material-symbols-outlined text-lg" data-icon="bookmark_border">bookmark_border</span>
+</button>
+</div>
+</div>
+</div>
+</article>
+<!-- CARD 5: TRUFFLES (#5 LATE NIGHT) -->
+<article class="rounded-2xl bg-[#141620] border border-[#232738] p-5 md:p-6 shadow-xl hover:border-surface-variant transition-all group overflow-hidden">
+<div class="flex flex-col lg:flex-row gap-6">
+<!-- Left Image -->
+<div class="lg:w-64 h-52 lg:h-auto rounded-xl overflow-hidden relative flex-shrink-0">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Gourmet double-patty American cheeseburger with melted cheddar dripping, accompanied by golden crispy french fries and a rich chocolate milkshake in an energetic classic diner atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7RSQDnwZgNKGTx1iIUMPiQJlVUrQZPoDFCvFr29GLFhumBQqz8nvLqIKlzFJwLQuz5mPeNVX9IZtrGHkT7-ttMugkxBdiXD0pHAhUKU_qkRI8iHkqOu3GuMexeXOoxzseKck2s1i2jx59ZRP8WBtVe0X7UDJ72z0wz4KnvwbPOGbJ0qxULYalA-i3zTFYwjAGTtCcN_IkWd4Mxs0CfIdRov7IFs9J3dd_GlR5fIrnFBNwprFtiaKuNN8wB4qm-5niiRvM6PkYVg4"/>
+<div class="absolute inset-0 bg-gradient-to-t from-[#141620] via-transparent to-black/40"></div>
+<div class="absolute top-3 left-3 bg-indigo-950 text-indigo-300 border border-indigo-700/50 font-bold px-2.5 py-1 rounded-full text-label-xs font-label-xs flex items-center gap-1 shadow-lg">
+<span class="material-symbols-outlined text-xs" data-icon="bedtime">bedtime</span>
+                #5 Late Night • 86%
+              </div>
+<div class="absolute bottom-3 left-3 bg-[#090A0F]/80 backdrop-blur-md px-2.5 py-0.5 rounded-md text-label-xs font-label-xs text-on-surface border border-[#232738]">
+                Koramangala • 1.4 km
+              </div>
+</div>
+<!-- Content Area -->
+<div class="flex-1 flex flex-col justify-between space-y-4">
+<div>
+<div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+<div class="flex items-center gap-2">
+<span class="px-2.5 py-0.5 rounded-full text-label-xs font-label-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="moped">moped</span> Online Order
+                    </span>
+<span class="px-2.5 py-0.5 rounded-full text-label-xs font-label-xs bg-surface-container-high text-amber-400 border border-amber-400/20 font-mono">
+                      Open till 1:30 AM
+                    </span>
+</div>
+<div class="text-label-md font-label-md text-on-surface-variant font-mono">
+                    ₹600 for two
+                  </div>
+</div>
+<div class="flex items-baseline justify-between gap-4">
+<h3 class="text-headline-lg font-headline-lg font-bold text-white group-hover:text-primary transition-colors">
+                    Truffles Ice &amp; Spice
+                  </h3>
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#1B1E2C] border border-[#232738]">
+<span class="material-symbols-outlined text-sm fill text-amber-400" data-icon="star">star</span>
+<span class="font-bold text-white text-title-sm">4.5</span>
+<span class="text-on-surface-variant/60 text-label-xs">(28.9k)</span>
+</div>
+</div>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1">
+                  Gourmet Burgers, Shakes, American Diner • St. Marks / Koramangala
+                </p>
+</div>
+<!-- AI Rationale -->
+<div class="p-3.5 rounded-xl bg-[#141620]/60 border border-white/10 backdrop-blur-md">
+<div class="flex items-start gap-2.5">
+<div class="w-6 h-6 rounded-md bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-300 flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-sm fill" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div>
+<span class="text-label-xs font-label-xs uppercase font-bold tracking-wide text-indigo-300 block mb-0.5">AI Affinity Reasoning</span>
+<p class="text-body-sm font-body-sm text-on-surface leading-relaxed">
+                      Best-value gourmet indulgence. The <strong class="text-white font-semibold">All-American Cheese Burger</strong> &amp; <strong class="text-white font-semibold">Dutch Truffle Cake</strong> offer dependable late-night comfort with 4.5★ consistency over 10+ years in the local market.
+                    </p>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex flex-wrap items-center gap-3 pt-2">
+<button class="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#FF334B] to-[#FF5E3A] text-white font-semibold text-label-md font-label-md glow-ember active:scale-95 transition-all">
+                  Order Quick Delivery
+                </button>
+<button class="px-5 py-2.5 rounded-full bg-[#1B1E2C] hover:bg-surface-container-high text-on-surface border border-[#232738] font-semibold text-label-md font-label-md active:scale-95 transition-all">
+                  View Diner Specials
+                </button>
+<button aria-label="Bookmark" class="ml-auto w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-white border border-[#232738]">
+<span class="material-symbols-outlined text-lg" data-icon="bookmark_border">bookmark_border</span>
+</button>
+</div>
+</div>
+</div>
+</article>
+</div>
+</main>
+</div>
+</body></html>

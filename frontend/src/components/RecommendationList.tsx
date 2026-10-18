@@ -1,4 +1,11 @@
-import { Clock, Database, AlertCircle } from "lucide-react";
+import {
+  Database,
+  Zap,
+  Cpu,
+  Sparkles,
+  AlertCircle,
+  MapPin,
+} from "lucide-react";
 import type { RecommendationResponse } from "../types";
 import { RecommendationCard } from "./RecommendationCard";
 
@@ -9,41 +16,91 @@ interface Props {
 export function RecommendationList({ data }: Props) {
   if (data.recommendations.length === 0) {
     return (
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 flex gap-3 items-start">
-        <AlertCircle className="text-amber-500 flex-shrink-0 mt-0.5" size={20} />
-        <div>
-          <p className="font-semibold text-amber-800">No restaurants found</p>
-          <p className="text-amber-700 text-sm mt-1">{data.message}</p>
+      <div className="bg-[#141620] border border-amber-500/30 rounded-2xl p-7 flex gap-4 items-start shadow-xl">
+        <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 flex-shrink-0">
+          <AlertCircle size={22} />
+        </div>
+        <div className="space-y-1.5">
+          <h3 className="text-base font-bold text-white">No Exact Matches in this Quadrant</h3>
+          <p className="text-slate-300 text-sm leading-relaxed">{data.message}</p>
+          <div className="pt-2 flex flex-wrap gap-2 text-xs text-slate-400">
+            <span>💡 Pro tip: Try selecting Koramangala or Indiranagar, or lowering the rating threshold to 3.0★.</span>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Stats bar */}
-      <div className="flex items-center gap-6 text-sm text-gray-500 bg-gray-50 rounded-lg px-4 py-2.5">
-        <span className="flex items-center gap-1.5">
-          <Database size={14} />
-          {data.total_filtered.toLocaleString()} restaurants matched your filters
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Clock size={14} />
-          {data.processing_time_ms}ms
-        </span>
-        {data.llm_fallback && (
-          <span className="flex items-center gap-1.5 text-amber-600">
-            <AlertCircle size={14} />
-            AI fallback mode
-          </span>
-        )}
+    <div className="space-y-6">
+      {/* Live Metric Ticker Ribbon */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 rounded-2xl bg-[#141620] border border-[#232738] text-xs shadow-xl">
+        <div className="flex items-center gap-3 px-2">
+          <div className="w-8 h-8 rounded-lg bg-[#1E2230] flex items-center justify-center text-[#FF5E3A]">
+            <Database size={15} />
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Matched Candidates</p>
+            <p className="text-sm font-bold text-white font-mono">
+              {data.total_filtered.toLocaleString()} Venues
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 px-2">
+          <div className="w-8 h-8 rounded-lg bg-[#1E2230] flex items-center justify-center text-emerald-400">
+            <Zap size={15} />
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Inference Latency</p>
+            <p className="text-sm font-bold text-emerald-400 font-mono">
+              {data.processing_time_ms}ms (Groq LPU)
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 px-2">
+          <div className="w-8 h-8 rounded-lg bg-[#1E2230] flex items-center justify-center text-purple-400">
+            <Cpu size={15} />
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">LLM Orchestrator</p>
+            <p className="text-sm font-bold text-white truncate max-w-[140px]">
+              {data.llm_fallback ? "Heuristic Top-5" : "Groq / GPT-OSS"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 px-2">
+          <div className="w-8 h-8 rounded-lg bg-[#1E2230] flex items-center justify-center text-amber-400">
+            <MapPin size={15} />
+          </div>
+          <div>
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Knowledge Graph</p>
+            <p className="text-sm font-bold text-white font-mono">51.7k Bangalore</p>
+          </div>
+        </div>
       </div>
 
-      <h2 className="text-xl font-bold text-gray-800">
-        🍽️ Top {data.recommendations.length} Recommendations
-      </h2>
+      {/* Section Title Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-white tracking-tight">
+              AI Gastronomy Picks for Bangalore
+            </h2>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FF334B]/15 text-[#FF5E3A] border border-[#FF334B]/30 flex items-center gap-1">
+              <Sparkles size={10} /> Live Synthesized
+            </span>
+          </div>
+          <p className="text-xs text-slate-400 mt-1">
+            Top {data.recommendations.length} culinary recommendations tailored to your exact budget, gastronomy, and ambience vibes.
+          </p>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {/* Recommendations Responsive Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {data.recommendations.map((rec, i) => (
           <RecommendationCard
             key={`${rec.name}-${i}`}
