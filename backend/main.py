@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from services.data_loader import DataLoader
 from routers.recommend import router as recommend_router
+from routers.more import router as more_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -61,6 +62,7 @@ app.add_middleware(
 )
 
 app.include_router(recommend_router)
+app.include_router(more_router)
 
 
 @app.get("/health")

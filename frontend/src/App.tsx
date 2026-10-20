@@ -17,12 +17,16 @@ const queryClient = new QueryClient();
 function AppContent() {
   const { mutate, data, isPending, isError, error, reset } = useRecommendations();
   const [quickQuery, setQuickQuery] = useState("");
+  const [lastPrefs, setLastPrefs] = useState<UserPreferences | null>(null);
+
+  const handleSubmit = (prefs: UserPreferences) => {
+    setLastPrefs(prefs);
+    mutate(prefs);
+  };
 
   const handleQuickSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!quickQuery.trim()) return;
-
-    // Dispatch default quick query targeted at Koramangala or Bangalore with custom vibes
     const quickPrefs: UserPreferences = {
       location: "Koramangala",
       budget: "medium",
@@ -30,6 +34,7 @@ function AppContent() {
       min_rating: 3.5,
       preferences: quickQuery.trim(),
     };
+    setLastPrefs(quickPrefs);
     mutate(quickPrefs);
   };
 
@@ -100,7 +105,7 @@ function AppContent() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Preference Console (Sidebar) */}
           <div className="lg:col-span-4 lg:sticky lg:top-24">
-            <PreferenceForm onSubmit={mutate} isLoading={isPending} />
+            <PreferenceForm onSubmit={handleSubmit} isLoading={isPending} />
           </div>
 
           {/* Right Column: Recommendations Stream */}
@@ -146,7 +151,7 @@ function AppContent() {
             )}
 
             {/* Live Recommendation Output */}
-            {data && !isPending && <RecommendationList data={data} />}
+            {data && !isPending && lastPrefs && <RecommendationList data={data} prefs={lastPrefs} />}
 
             {/* Empty Initial Onboarding State */}
             {!data && !isPending && !isError && (

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Database,
   Zap,
@@ -5,15 +6,47 @@ import {
   Sparkles,
   AlertCircle,
   MapPin,
+  ChevronDown,
+  Loader2,
 } from "lucide-react";
-import type { RecommendationResponse } from "../types";
+import type { RecommendationResponse, RestaurantRecommendation, UserPreferences } from "../types";
 import { RecommendationCard } from "./RecommendationCard";
+import { fetchMoreRecommendations } from "../lib/api";
 
 interface Props {
   data: RecommendationResponse;
+  prefs: UserPreferences;
 }
 
-export function RecommendationList({ data }: Props) {
+const PAGE_SIZE = 10;
+
+export function RecommendationList({ data, prefs }: Props) {
+  const [extra, setExtra] = useState<RestaurantRecommendation[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [exhausted, setExhausted] = useState(false);
+
+  const allRecs = [...data.recommendations, ...extra];
+  // total unique candidates from the backend (LLM picks + heuristic pool)
+  const totalAvailable = data.total_filtered;
+  const canLoadMore = !exhausted && allRecs.length < totalAvailable;
+
+  async function loadMore() {
+    setLoading(true);
+    try {
+      const res = await fetchMoreRecommendations(prefs, allRecs.length, PAGE_SIZE);
+      if (res.recommendations.length === 0) {
+        setExhausted(true);
+      } else {
+        setExtra((prev) => [...prev, ...res.recommendations]);
+        if (res.recommendations.length < PAGE_SIZE) setExhausted(true);
+      }
+    } catch {
+      setExhausted(true);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   if (data.recommendations.length === 0) {
     return (
       <div className="bg-[#141620] border border-amber-500/30 rounded-2xl p-7 flex gap-4 items-start shadow-xl">
@@ -24,7 +57,7 @@ export function RecommendationList({ data }: Props) {
           <h3 className="text-base font-bold text-white">No Exact Matches in this Quadrant</h3>
           <p className="text-slate-300 text-sm leading-relaxed">{data.message}</p>
           <div className="pt-2 flex flex-wrap gap-2 text-xs text-slate-400">
-            <span>💡 Pro tip: Try selecting Koramangala or Indiranagar, or lowering the rating threshold to 3.0★.</span>
+            <span>?? Pro tip: Try selecting Koramangala or Indiranagar, or lowering the rating threshold to 3.0?.</span>
           </div>
         </div>
       </div>
@@ -94,22 +127,48 @@ export function RecommendationList({ data }: Props) {
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Top {data.recommendations.length} culinary recommendations tailored to your exact budget, gastronomy, and ambience vibes.
+            Showing {allRecs.length} of {totalAvailable.toLocaleString()} matched venues — top {data.recommendations.length} AI-ranked, rest sorted by score.
           </p>
         </div>
       </div>
 
       {/* Recommendations Responsive Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {data.recommendations.map((rec, i) => (
+        {allRecs.map((rec, i) => (
           <RecommendationCard
             key={`${rec.name}-${i}`}
             recommendation={rec}
             rank={i + 1}
-            isFallback={data.llm_fallback}
+            isFallback={i >= data.recommendations.length || data.llm_fallback}
           />
         ))}
       </div>
+
+      {/* Load More */}
+      {canLoadMore && (
+        <div className="flex flex-col items-center gap-2 pt-2">
+          <button
+            onClick={loadMore}
+            disabled={loading}
+            className="flex items-center gap-2 px-6 py-3 rounded-full border border-[#232738] bg-[#141620] hover:border-slate-500 hover:bg-[#1E2230] text-slate-300 hover:text-white font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <><Loader2 size={15} className="animate-spin" /> Loading venues…</>
+            ) : (
+              <><ChevronDown size={15} /> Load {Math.min(PAGE_SIZE, totalAvailable - allRecs.length)} more venues</>
+            )}
+          </button>
+          <p className="text-xs text-slate-500">
+            {totalAvailable - allRecs.length} venues remaining
+          </p>
+        </div>
+      )}
+
+      {exhausted && extra.length > 0 && (
+        <p className="text-center text-xs text-slate-500 pt-2">
+          All {allRecs.length} matched venues shown.
+        </p>
+      )}
     </div>
   );
 }
