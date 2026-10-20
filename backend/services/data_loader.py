@@ -1,17 +1,16 @@
 """
-DataLoader — loads the Zomato HuggingFace dataset and caches it as a DataFrame.
+DataLoader — loads the Zomato dataset from a pre-packed compressed CSV.
 
 Handles:
 - Column normalization (cost commas, rating "4.1/5" / "NEW" conversion)
 - Schema validation on startup
-- Local CSV fallback (if dataset was previously downloaded)
+- HuggingFace download fallback (local dev only, requires datasets package)
 """
 import logging
 import math
 from pathlib import Path
 
 import pandas as pd
-from datasets import load_dataset
 
 from config import HF_DATASET_ID
 
@@ -26,6 +25,9 @@ REQUIRED_COLUMNS = {
     "aggregate_rating",
     "votes",
 }
+
+# Pre-cleaned embedded dataset (1.2MB compressed, ~18MB RAM) for instant startup on low-memory tiers (Render Free Tier 512MB)
+_PREPACKED_CLEAN_GZ = Path(__file__).resolve().parent.parent / "data" / "restaurants_clean.csv.gz"
 
 # Optional cache path to avoid re-downloading
 _CACHE_CSV = Path(__file__).parent / ".data_cache.csv"
@@ -46,11 +48,23 @@ class DataLoader:
 
     @classmethod
     def _load(cls) -> pd.DataFrame:
-        # Try local cache first
-        if _CACHE_CSV.exists():
+        # 1. Try embedded pre-cleaned compressed dataset first (avoids Render Free Tier 512MB OOM)
+        if _PREPACKED_CLEAN_GZ.exists():
+            logger.info("Loading dataset from pre-packed clean archive: %s", _PREPACKED_CLEAN_GZ)
+            df = pd.read_csv(_PREPACKED_CLEAN_GZ, compression="gzip", low_memory=False)
+        # 2. Try local cache file
+        elif _CACHE_CSV.exists():
             logger.info("Loading dataset from local cache: %s", _CACHE_CSV)
             df = pd.read_csv(_CACHE_CSV, low_memory=False)
+        # 3. Fallback: download raw from HuggingFace (needs `datasets` package — dev only)
         else:
+            try:
+                from datasets import load_dataset  # lazy import — not installed on Render
+            except ImportError:
+                raise RuntimeError(
+                    "Pre-packed dataset not found and 'datasets' package is not installed. "
+                    "Ensure backend/data/restaurants_clean.csv.gz is committed to the repo."
+                )
             logger.info("Downloading dataset from HuggingFace: %s", HF_DATASET_ID)
             hf_dataset = load_dataset(HF_DATASET_ID, split="train")
             df = hf_dataset.to_pandas()

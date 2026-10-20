@@ -1,0 +1,4 @@
+# Dev/test only — NOT installed on Render
+-r requirements.txt
+datasets>=2.19.0
+pytest>=8.0.0
