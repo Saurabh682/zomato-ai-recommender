@@ -33,11 +33,11 @@ export function RecommendationCard({ recommendation: r, rank, isFallback }: Prop
 
   const isGold = rank === 1;
 
-  // Deep-link to Zomato search for this specific restaurant.
-  // Uses Zomato's search endpoint — name-only query finds the restaurant directly.
-  const zomatoSearchUrl = `https://www.zomato.com/search?q=${encodeURIComponent(r.name)}`;
-  // Book table uses the same search URL scoped to this restaurant
-  const zomatoBookUrl = `https://www.zomato.com/search?q=${encodeURIComponent(r.name)}&book_table=1`;
+  // Build Zomato deep-link: zomato.com/bangalore/{name-slug}-{location-slug}/info
+  // e.g. "XO Belgian Waffle" + "Koramangala 5th Block" → xo-belgian-waffle-koramangala-5th-block
+  const toSlug = (s: string) =>
+    s.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim().replace(/\s+/g, "-");
+  const zomatoUrl = `https://www.zomato.com/bangalore/${toSlug(r.name)}-${toSlug(r.location)}/info`;
 
   return (
     <article
@@ -131,7 +131,7 @@ export function RecommendationCard({ recommendation: r, rank, isFallback }: Prop
       {/* Action CTA Buttons */}
       <div className="flex items-center gap-2.5 pt-5 mt-2">
         <a
-          href={zomatoSearchUrl}
+          href={zomatoUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="flex-1 py-2 px-3 rounded-full bg-gradient-to-r from-[#FF334B] to-[#FF5E3A] hover:brightness-110 active:scale-95 text-white font-semibold text-xs flex items-center justify-center gap-1.5 glow-ember transition-all text-center"
@@ -142,7 +142,7 @@ export function RecommendationCard({ recommendation: r, rank, isFallback }: Prop
 
         {r.book_table && (
           <a
-            href={zomatoBookUrl}
+            href={zomatoUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="py-2 px-3 rounded-full bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 font-semibold text-xs transition-all flex items-center gap-1"
