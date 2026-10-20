@@ -54,8 +54,11 @@ class DataLoader:
             logger.info("Downloading dataset from HuggingFace: %s", HF_DATASET_ID)
             hf_dataset = load_dataset(HF_DATASET_ID, split="train")
             df = hf_dataset.to_pandas()
-            df.to_csv(_CACHE_CSV, index=False)
-            logger.info("Dataset cached to %s", _CACHE_CSV)
+            try:
+                df.to_csv(_CACHE_CSV, index=False)
+                logger.info("Dataset cached to %s", _CACHE_CSV)
+            except Exception as e:
+                logger.warning("Could not persist local cache file: %s", e)
 
         df = cls._clean(df)
         cls._validate_schema(df)

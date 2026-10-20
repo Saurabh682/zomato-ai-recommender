@@ -5,6 +5,7 @@ Lifespan: pre-loads the Zomato dataset on startup so the first request
 isn't slow. The DataFrame is cached in DataLoader._df.
 """
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -41,11 +42,20 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — allow Vite dev server
+# CORS — allow Vite dev server, production Vercel domains, and optional custom FRONTEND_URL
+allowed_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+custom_frontend = os.getenv("FRONTEND_URL")
+if custom_frontend:
+    allowed_origins.append(custom_frontend)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
-    allow_methods=["GET", "POST"],
+    allow_origins=["*"] if os.getenv("ALLOW_ALL_CORS") == "true" else allowed_origins,
+    allow_origin_regex=r"^https:\/\/.*\.vercel\.app$",
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
     expose_headers=["X-LLM-Fallback"],
 )
