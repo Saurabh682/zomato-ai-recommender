@@ -33,10 +33,11 @@ export function RecommendationCard({ recommendation: r, rank, isFallback }: Prop
 
   const isGold = rank === 1;
 
-  // Search URL on Zomato for Bangalore
-  const zomatoSearchUrl = `https://www.zomato.com/bangalore/restaurants?q=${encodeURIComponent(
-    r.name + " " + r.location
-  )}`;
+  // Deep-link to Zomato search for this specific restaurant.
+  // Uses Zomato's search endpoint — name-only query finds the restaurant directly.
+  const zomatoSearchUrl = `https://www.zomato.com/search?q=${encodeURIComponent(r.name)}`;
+  // Book table uses the same search URL scoped to this restaurant
+  const zomatoBookUrl = `https://www.zomato.com/search?q=${encodeURIComponent(r.name)}&book_table=1`;
 
   return (
     <article
@@ -141,7 +142,7 @@ export function RecommendationCard({ recommendation: r, rank, isFallback }: Prop
 
         {r.book_table && (
           <a
-            href={zomatoSearchUrl}
+            href={zomatoBookUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="py-2 px-3 rounded-full bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 font-semibold text-xs transition-all flex items-center gap-1"
