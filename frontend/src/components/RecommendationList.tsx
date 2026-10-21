@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import {
   Database,
   Zap,
@@ -8,6 +10,7 @@ import {
   MapPin,
   ChevronDown,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import type { RecommendationResponse, RestaurantRecommendation, UserPreferences } from "../types";
 import { RecommendationCard } from "./RecommendationCard";
@@ -24,14 +27,39 @@ export function RecommendationList({ data, prefs }: Props) {
   const [extra, setExtra] = useState<RestaurantRecommendation[]>([]);
   const [loading, setLoading] = useState(false);
   const [exhausted, setExhausted] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   const allRecs = [...data.recommendations, ...extra];
   // total unique candidates from the backend (LLM picks + heuristic pool)
   const totalAvailable = data.total_filtered;
   const canLoadMore = !exhausted && allRecs.length < totalAvailable;
 
+  // Stagger entrance animation on new recommendations
+  useGSAP(
+    () => {
+      if (!gridRef.current) return;
+      const cards = gridRef.current.querySelectorAll(".recommendation-card");
+      if (cards.length > 0) {
+        gsap.fromTo(
+          cards,
+          { opacity: 0, y: 22 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.45,
+            stagger: 0.06,
+            ease: "power2.out",
+          }
+        );
+      }
+    },
+    { dependencies: [data.recommendations], scope: gridRef }
+  );
+
   async function loadMore() {
     setLoading(true);
+    setLoadError(null);
     try {
       const res = await fetchMoreRecommendations(prefs, allRecs.length, PAGE_SIZE);
       if (res.recommendations.length === 0) {
@@ -40,8 +68,9 @@ export function RecommendationList({ data, prefs }: Props) {
         setExtra((prev) => [...prev, ...res.recommendations]);
         if (res.recommendations.length < PAGE_SIZE) setExhausted(true);
       }
-    } catch {
-      setExhausted(true);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to load additional venues";
+      setLoadError(msg);
     } finally {
       setLoading(false);
     }
@@ -57,7 +86,7 @@ export function RecommendationList({ data, prefs }: Props) {
           <h3 className="text-base font-bold text-white">No Exact Matches in this Quadrant</h3>
           <p className="text-slate-300 text-sm leading-relaxed">{data.message}</p>
           <div className="pt-2 flex flex-wrap gap-2 text-xs text-slate-400">
-            <span>?? Pro tip: Try selecting Koramangala or Indiranagar, or lowering the rating threshold to 3.0?.</span>
+            <span>💡 Pro tip: Try selecting Koramangala or Indiranagar, or lowering the rating threshold to 3.0★.</span>
           </div>
         </div>
       </div>
@@ -133,7 +162,7 @@ export function RecommendationList({ data, prefs }: Props) {
       </div>
 
       {/* Recommendations Responsive Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {allRecs.map((rec, i) => (
           <RecommendationCard
             key={`${rec.name}-${i}`}
@@ -146,18 +175,31 @@ export function RecommendationList({ data, prefs }: Props) {
 
       {/* Load More */}
       {canLoadMore && (
-        <div className="flex flex-col items-center gap-2 pt-2">
+        <div className="flex flex-col items-center gap-2.5 pt-2">
           <button
             onClick={loadMore}
             disabled={loading}
-            className="flex items-center gap-2 px-6 py-3 rounded-full border border-[#232738] bg-[#141620] hover:border-slate-500 hover:bg-[#1E2230] text-slate-300 hover:text-white font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-6 py-3 rounded-full border border-[#232738] bg-[#141620] hover:border-slate-500 hover:bg-[#1E2230] text-slate-300 hover:text-white font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {loading ? (
-              <><Loader2 size={15} className="animate-spin" /> Loading venues…</>
+              <><Loader2 size={15} className="animate-spin text-[#FF5E3A]" /> Loading venues…</>
             ) : (
               <><ChevronDown size={15} /> Load {Math.min(PAGE_SIZE, totalAvailable - allRecs.length)} more venues</>
             )}
           </button>
+          {loadError && (
+            <div className="flex items-center gap-2 text-red-400 text-xs bg-red-950/30 border border-red-500/30 px-3 py-1.5 rounded-lg">
+              <AlertCircle size={14} />
+              <span>{loadError}</span>
+              <button
+                type="button"
+                onClick={loadMore}
+                className="underline font-semibold hover:text-red-300 flex items-center gap-1 ml-1"
+              >
+                <RefreshCw size={11} /> Retry
+              </button>
+            </div>
+          )}
           <p className="text-xs text-slate-500">
             {totalAvailable - allRecs.length} venues remaining
           </p>

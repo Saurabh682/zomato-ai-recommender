@@ -52,6 +52,9 @@ class DataLoader:
         if _PREPACKED_CLEAN_GZ.exists():
             logger.info("Loading dataset from pre-packed clean archive: %s", _PREPACKED_CLEAN_GZ)
             df = pd.read_csv(_PREPACKED_CLEAN_GZ, compression="gzip", low_memory=False)
+            cls._validate_schema(df)
+            logger.info("Dataset ready: %d restaurants", len(df))
+            return df
         # 2. Try local cache file
         elif _CACHE_CSV.exists():
             logger.info("Loading dataset from local cache: %s", _CACHE_CSV)

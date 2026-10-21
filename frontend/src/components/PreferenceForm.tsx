@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   MapPin,
   UtensilsCrossed,
@@ -6,13 +6,60 @@ import {
   Sparkles,
   RotateCcw,
   Zap,
+  Dice5,
 } from "lucide-react";
 import type { UserPreferences } from "../types";
 
 interface Props {
   onSubmit: (prefs: UserPreferences) => void;
   isLoading: boolean;
+  initialValues?: UserPreferences | null;
 }
+
+const SURPRISE_PRESETS: Array<UserPreferences> = [
+  {
+    location: "Indiranagar",
+    budget: "medium",
+    cuisine: "Pizza",
+    min_rating: 4.0,
+    preferences: "Artisanal sourdough pizza, craft beer on tap, lively evening ambience",
+  },
+  {
+    location: "Koramangala",
+    budget: "medium",
+    cuisine: "Cafe",
+    min_rating: 4.0,
+    preferences: "Specialty pour-over coffee, warm waffles, aesthetic greenery",
+  },
+  {
+    location: "Whitefield",
+    budget: "high",
+    cuisine: "Continental",
+    min_rating: 4.0,
+    preferences: "Rooftop microbrewery with sunset views and gourmet appetizers",
+  },
+  {
+    location: "HSR Layout",
+    budget: "low",
+    cuisine: "South Indian",
+    min_rating: 4.0,
+    preferences: "Crispy ghee roast dosa, crunchy vadas, and authentic filter coffee",
+  },
+  {
+    location: "BTM",
+    budget: "medium",
+    cuisine: "Biryani",
+    min_rating: 3.5,
+    preferences: "Authentic flavorful Dum Biryani with spicy succulent kebabs",
+  },
+  {
+    location: "JP Nagar",
+    budget: "high",
+    cuisine: "North Indian",
+    min_rating: 4.0,
+    preferences: "Rich butter chicken, freshly baked garlic naan, cozy dinner",
+  },
+];
 
 const POPULAR_LOCATIONS = [
   "Koramangala",
@@ -52,9 +99,15 @@ const INITIAL_FORM: UserPreferences = {
   preferences: "",
 };
 
-export function PreferenceForm({ onSubmit, isLoading }: Props) {
-  const [form, setForm] = useState<UserPreferences>(INITIAL_FORM);
+export function PreferenceForm({ onSubmit, isLoading, initialValues }: Props) {
+  const [form, setForm] = useState<UserPreferences>(initialValues || INITIAL_FORM);
   const [errors, setErrors] = useState<Partial<Record<keyof UserPreferences, string>>>({});
+
+  useEffect(() => {
+    if (initialValues) {
+      setForm(initialValues);
+    }
+  }, [initialValues]);
 
   const validate = (): boolean => {
     const newErrors: typeof errors = {};
@@ -73,6 +126,13 @@ export function PreferenceForm({ onSubmit, isLoading }: Props) {
     setErrors({});
   };
 
+  const handleSurpriseMe = () => {
+    const randomPreset = SURPRISE_PRESETS[Math.floor(Math.random() * SURPRISE_PRESETS.length)];
+    setForm(randomPreset);
+    setErrors({});
+    onSubmit(randomPreset);
+  };
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -89,14 +149,26 @@ export function PreferenceForm({ onSubmit, isLoading }: Props) {
             <p className="text-xs text-slate-400">Algorithmic Palate &amp; Ambience Filtering</p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={handleReset}
-          className="text-xs text-slate-400 hover:text-[#FF334B] transition-colors flex items-center gap-1 px-2.5 py-1 rounded-md hover:bg-[#141620]"
-        >
-          <RotateCcw size={12} />
-          Reset
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handleSurpriseMe}
+            disabled={isLoading}
+            className="text-xs text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 disabled:opacity-50"
+            title="Random culinary vibe"
+          >
+            <Dice5 size={12} />
+            Surprise
+          </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="text-xs text-slate-400 hover:text-[#FF334B] transition-colors flex items-center gap-1 px-2 py-1 rounded-md hover:bg-[#141620]"
+          >
+            <RotateCcw size={12} />
+            Reset
+          </button>
+        </div>
       </div>
 
       {/* Location Input & Pills */}
@@ -271,9 +343,9 @@ export function PreferenceForm({ onSubmit, isLoading }: Props) {
           )}
         </button>
         <div className="flex items-center justify-center gap-2 mt-2.5 text-slate-400 text-[11px]">
-          <span>Engine: Groq LPU™ openai/gpt-oss-120b</span>
+          <span>Engine: Groq LPU™ (with Gemini fallback)</span>
           <span>•</span>
-          <span className="text-emerald-400 font-mono">~600ms latency</span>
+          <span className="text-emerald-400 font-mono">Real-time inference</span>
         </div>
       </div>
     </form>

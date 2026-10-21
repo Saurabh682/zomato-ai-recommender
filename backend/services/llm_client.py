@@ -145,10 +145,10 @@ def _normalize_recommendations(
 
 
 def _call_groq(prompt: str) -> str:
-    """Invoke Groq LLM API."""
+    """Invoke Groq LLM API with explicit request timeout."""
     from groq import Groq
 
-    client = Groq(api_key=GROQ_API_KEY)
+    client = Groq(api_key=GROQ_API_KEY, timeout=12.0)
     chat = client.chat.completions.create(
         messages=[
             {"role": "system", "content": SYSTEM_INSTRUCTION},
@@ -196,7 +196,24 @@ def get_recommendations(
         return [], False
 
     unique_candidates = candidates.drop_duplicates(subset=["name"])
-    prompt = build_prompt(unique_candidates[:50], location, budget, cuisine, min_rating, preferences)
+
+    # If user provided specific preferences or vibes, boost candidates matching keywords
+    # so relevant options are prioritized into the top 50 sent to LLM
+    if preferences and preferences.strip():
+        pref_words = [w.lower() for w in re.findall(r"\w{3,}", preferences)]
+        if pref_words:
+            def _keyword_boost(row):
+                cuis = str(row.get("cuisines", "")).lower()
+                name = str(row.get("name", "")).lower()
+                return sum(1 for w in pref_words if w in cuis or w in name)
+
+            boosts = unique_candidates.apply(_keyword_boost, axis=1)
+            if boosts.max() > 0:
+                unique_candidates = unique_candidates.assign(_boost=boosts).sort_values(
+                    by=["_boost", "_score"], ascending=[False, False]
+                ).drop(columns=["_boost"])
+
+    prompt = build_prompt(unique_candidates.iloc[:50], location, budget, cuisine, min_rating, preferences)
 
     # Try configured LLM providers: Groq first if key present, else Gemini
     providers = []

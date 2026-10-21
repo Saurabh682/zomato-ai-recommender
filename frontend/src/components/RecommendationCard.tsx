@@ -16,32 +16,32 @@ interface Props {
   isFallback: boolean;
 }
 
+// Build Zomato deep-link: zomato.com/bangalore/{name-slug}-{location-slug}/info
+// e.g. "XO Belgian Waffle" + "Koramangala 5th Block" → xo-belgian-waffle-koramangala-5th-block
+const toSlug = (s: string) =>
+  s.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim().replace(/\s+/g, "-");
+
 export function RecommendationCard({ recommendation: r, rank, isFallback }: Props) {
   // Rank badge styling
   const rankBadges = [
-    { label: "#1 Top Match • 98%", badgeClass: "bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-lg shadow-amber-500/20 font-black" },
-    { label: "#2 High Affinity • 95%", badgeClass: "bg-gradient-to-r from-slate-200 to-slate-400 text-black shadow-md font-black" },
-    { label: "#3 Popular Pick • 92%", badgeClass: "bg-gradient-to-r from-amber-700 to-amber-900 text-amber-100 font-black" },
-    { label: `#${rank} Curated • 89%`, badgeClass: "bg-[#1E2230] text-slate-300 border border-[#232738] font-bold" },
-    { label: `#${rank} Curated • 86%`, badgeClass: "bg-[#1E2230] text-slate-300 border border-[#232738] font-bold" },
+    { label: "#1 Top Match", badgeClass: "bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-lg shadow-amber-500/20 font-black" },
+    { label: "#2 High Affinity", badgeClass: "bg-gradient-to-r from-slate-200 to-slate-400 text-black shadow-md font-black" },
+    { label: "#3 Popular Pick", badgeClass: "bg-gradient-to-r from-amber-700 to-amber-900 text-amber-100 font-black" },
+    { label: "#4 Curated Pick", badgeClass: "bg-[#1E2230] text-slate-300 border border-[#232738] font-bold" },
+    { label: "#5 Curated Pick", badgeClass: "bg-[#1E2230] text-slate-300 border border-[#232738] font-bold" },
   ];
 
   const currentBadge = rankBadges[rank - 1] || {
-    label: `#${rank} Pick`,
-    badgeClass: "bg-[#1E2230] text-slate-300 border border-[#232738] font-bold",
+    label: `#${rank} Scored Venue`,
+    badgeClass: "bg-[#1E2230] text-slate-300 border border-[#232738] font-medium",
   };
 
   const isGold = rank === 1;
-
-  // Build Zomato deep-link: zomato.com/bangalore/{name-slug}-{location-slug}/info
-  // e.g. "XO Belgian Waffle" + "Koramangala 5th Block" → xo-belgian-waffle-koramangala-5th-block
-  const toSlug = (s: string) =>
-    s.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim().replace(/\s+/g, "-");
   const zomatoUrl = `https://www.zomato.com/bangalore/${toSlug(r.name)}-${toSlug(r.location)}/info`;
 
   return (
     <article
-      className={`relative rounded-2xl bg-[#141620] border p-6 shadow-2xl transition-all duration-300 group overflow-hidden flex flex-col justify-between ${
+      className={`recommendation-card relative rounded-2xl bg-[#141620] border p-6 shadow-2xl transition-all duration-300 group overflow-hidden flex flex-col justify-between ${
         isGold
           ? "border-[#FF334B]/50 hover:border-[#FF334B] hover:shadow-[#FF334B]/10"
           : "border-[#232738] hover:border-slate-600"
