@@ -1,9 +1,16 @@
 import type { UserPreferences, RecommendationResponse } from "../types";
 
-let rawBase = (import.meta.env.VITE_API_BASE_URL || "").trim().replace(/\/+$/, "");
+let rawBase = (import.meta.env.VITE_API_BASE_URL || "").trim();
 
-// Automatically override deprecated/suspended Render instance with live Hugging Face backend
-if (!rawBase || rawBase.includes("onrender.com")) {
+// Strip accidental "VITE_API_BASE_URL=" prefix if pasted into env var value
+if (rawBase.startsWith("VITE_API_BASE_URL=")) {
+  rawBase = rawBase.replace(/^VITE_API_BASE_URL=/, "").trim();
+}
+
+rawBase = rawBase.replace(/\/+$/, "");
+
+// Automatically override deprecated/suspended Render instance or invalid relative URL with live Hugging Face Space
+if (!rawBase || rawBase.includes("onrender.com") || !rawBase.startsWith("http")) {
   rawBase = "https://deamonizer-zomato-ai-backend.hf.space";
 }
 
