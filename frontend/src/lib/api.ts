@@ -1,10 +1,16 @@
 import type { UserPreferences, RecommendationResponse } from "../types";
 
-let rawBase = (import.meta.env.VITE_API_BASE_URL || "https://deamonizer-zomato-ai-backend.hf.space").trim().replace(/\/+$/, "");
-if (rawBase && !rawBase.endsWith("/api")) {
+let rawBase = (import.meta.env.VITE_API_BASE_URL || "").trim().replace(/\/+$/, "");
+
+// Automatically override deprecated/suspended Render instance with live Hugging Face backend
+if (!rawBase || rawBase.includes("onrender.com")) {
+  rawBase = "https://deamonizer-zomato-ai-backend.hf.space";
+}
+
+if (!rawBase.endsWith("/api")) {
   rawBase += "/api";
 }
-const API_BASE = rawBase || "/api";
+const API_BASE = rawBase;
 
 export async function fetchRecommendations(
   prefs: UserPreferences
