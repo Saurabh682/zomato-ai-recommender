@@ -108,6 +108,14 @@ def test_cuisine_filtering(dataset):
     assert matches.all(), "Some records do not contain the requested cuisine"
 
 
+def test_multi_cuisine_filtering(dataset):
+    """Multi-cuisine filter matches records having ANY of the specified comma-separated cuisines."""
+    filtered = filter_restaurants(dataset, location="Indiranagar", budget="medium", cuisine="Pizza, Cafe", min_rating=0.0)
+    assert not filtered.empty, "Multi-cuisine query returned empty"
+    matches = filtered["cuisines"].str.contains(r"pizza|cafe", case=False, na=False)
+    assert matches.all(), "Some records matched neither Pizza nor Cafe"
+
+
 def test_min_rating_filtering(dataset):
     """Rating filter strictly filters rows >= min_rating."""
     min_r = 4.0

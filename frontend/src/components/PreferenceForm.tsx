@@ -71,24 +71,23 @@ const POPULAR_LOCATIONS = [
   "MG Road",
 ];
 
-const CUISINES = [
-  "",
+const POPULAR_CUISINES = [
   "Italian",
   "North Indian",
   "South Indian",
   "Chinese",
-  "Continental",
-  "Fast Food",
   "Biryani",
   "Cafe",
-  "Mughlai",
   "Pizza",
+  "Continental",
   "Burger",
+  "Fast Food",
+  "Mughlai",
   "Japanese",
   "Thai",
   "Mexican",
-  "Lebanese",
   "Street Food",
+  "Desserts",
 ];
 
 const INITIAL_FORM: UserPreferences = {
@@ -131,6 +130,27 @@ export function PreferenceForm({ onSubmit, isLoading, initialValues }: Props) {
     setForm(randomPreset);
     setErrors({});
     onSubmit(randomPreset);
+  };
+
+  const selectedCuisines = form.cuisine
+    ? form.cuisine
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
+
+  const handleToggleCuisine = (c: string) => {
+    let next: string[];
+    if (selectedCuisines.some((item) => item.toLowerCase() === c.toLowerCase())) {
+      next = selectedCuisines.filter((item) => item.toLowerCase() !== c.toLowerCase());
+    } else {
+      next = [...selectedCuisines, c];
+    }
+    setForm({ ...form, cuisine: next.join(", ") });
+  };
+
+  const handleClearCuisines = () => {
+    setForm({ ...form, cuisine: "" });
   };
 
   return (
@@ -253,24 +273,61 @@ export function PreferenceForm({ onSubmit, isLoading, initialValues }: Props) {
         </div>
       </div>
 
-      {/* Cuisine Selector */}
+      {/* Target Gastronomy & Multi-Cuisine Selector */}
       <div>
-        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
-          Target Gastronomy &amp; Cuisine
-        </label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            Target Gastronomy &amp; Cuisine
+          </label>
+          {selectedCuisines.length > 0 && (
+            <button
+              type="button"
+              onClick={handleClearCuisines}
+              className="text-[10px] text-[#FF5E3A] hover:underline cursor-pointer font-medium"
+            >
+              Clear all ({selectedCuisines.length})
+            </button>
+          )}
+        </div>
+
+        {/* Multi-Select Cuisine Chips */}
+        <div className="flex flex-wrap gap-1.5 mb-2.5 max-h-36 overflow-y-auto pr-0.5 custom-scrollbar">
+          {POPULAR_CUISINES.map((c) => {
+            const isSelected = selectedCuisines.some(
+              (item) => item.toLowerCase() === c.toLowerCase()
+            );
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => handleToggleCuisine(c)}
+                className={`px-2.5 py-1 rounded-full text-xs transition-all cursor-pointer flex items-center gap-1 ${
+                  isSelected
+                    ? "bg-[#FF334B]/20 text-white border border-[#FF334B] glow-border font-bold"
+                    : "bg-[#141620] text-slate-400 border border-[#232738] hover:border-slate-600 hover:text-slate-200"
+                }`}
+              >
+                <span>{c}</span>
+                {isSelected && <span className="text-[#FF334B] font-bold text-xs ml-0.5">✓</span>}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Input for custom / combined cuisine typing */}
         <div className="relative">
-          <UtensilsCrossed size={15} className="absolute left-3.5 top-3 text-slate-500" />
-          <select
+          <UtensilsCrossed size={14} className="absolute left-3.5 top-3 text-slate-500" />
+          <input
+            type="text"
+            placeholder={
+              selectedCuisines.length > 0
+                ? selectedCuisines.join(", ")
+                : "Or type custom cuisines (e.g. Dim Sum, Korean, Waffles)..."
+            }
             value={form.cuisine}
             onChange={(e) => setForm({ ...form, cuisine: e.target.value })}
-            className="w-full bg-[#141620] border border-[#232738] rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-[#FF334B] focus:ring-1 focus:ring-[#FF334B]/30 appearance-none cursor-pointer"
-          >
-            {CUISINES.map((c) => (
-              <option key={c} value={c} className="bg-[#141620] text-slate-100">
-                {c || "Any Gastronomy (All Cuisines)"}
-              </option>
-            ))}
-          </select>
+            className="w-full bg-[#141620] border border-[#232738] rounded-xl pl-9 pr-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#FF334B] focus:ring-1 focus:ring-[#FF334B]/30"
+          />
         </div>
       </div>
 

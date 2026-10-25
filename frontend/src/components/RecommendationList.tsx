@@ -11,9 +11,12 @@ import {
   ChevronDown,
   Loader2,
   RefreshCw,
+  LayoutGrid,
+  Map,
 } from "lucide-react";
 import type { RecommendationResponse, RestaurantRecommendation, UserPreferences } from "../types";
 import { RecommendationCard } from "./RecommendationCard";
+import { BangaloreMapView } from "./BangaloreMapView";
 import { fetchMoreRecommendations } from "../lib/api";
 
 interface Props {
@@ -28,6 +31,7 @@ export function RecommendationList({ data, prefs }: Props) {
   const [loading, setLoading] = useState(false);
   const [exhausted, setExhausted] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
   const gridRef = useRef<HTMLDivElement>(null);
 
   const allRecs = [...data.recommendations, ...extra];
@@ -144,8 +148,8 @@ export function RecommendationList({ data, prefs }: Props) {
         </div>
       </div>
 
-      {/* Section Title Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2">
+      {/* Section Title Header & View Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-2xl font-bold text-white tracking-tight">
@@ -159,19 +163,51 @@ export function RecommendationList({ data, prefs }: Props) {
             Showing {allRecs.length} of {totalAvailable.toLocaleString()} matched venues — top {data.recommendations.length} AI-ranked, rest sorted by score.
           </p>
         </div>
+
+        {/* View Mode Switcher (Grid vs Interactive Map) */}
+        <div className="flex items-center gap-1 p-1 bg-[#141620] border border-[#232738] rounded-xl self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setViewMode("grid")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              viewMode === "grid"
+                ? "bg-gradient-to-r from-[#FF334B] to-[#FF5E3A] text-white shadow-md shadow-[#FF334B]/25"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <LayoutGrid size={13} />
+            <span>Grid ({allRecs.length})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("map")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              viewMode === "map"
+                ? "bg-gradient-to-r from-[#FF334B] to-[#FF5E3A] text-white shadow-md shadow-[#FF334B]/25"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <Map size={13} />
+            <span>Map View</span>
+          </button>
+        </div>
       </div>
 
-      {/* Recommendations Responsive Grid */}
-      <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {allRecs.map((rec, i) => (
-          <RecommendationCard
-            key={`${rec.name}-${i}`}
-            recommendation={rec}
-            rank={i + 1}
-            isFallback={i >= data.recommendations.length || data.llm_fallback}
-          />
-        ))}
-      </div>
+      {/* Main Content: Map or Responsive Card Grid */}
+      {viewMode === "map" ? (
+        <BangaloreMapView recommendations={allRecs} />
+      ) : (
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {allRecs.map((rec, i) => (
+            <RecommendationCard
+              key={`${rec.name}-${i}`}
+              recommendation={rec}
+              rank={i + 1}
+              isFallback={i >= data.recommendations.length || data.llm_fallback}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Load More */}
       {canLoadMore && (

@@ -9,6 +9,7 @@ Strategy:
 5. Cap at MAX_CANDIDATES rows, sorted by _score desc
 """
 import logging
+import re
 
 import pandas as pd
 
@@ -44,10 +45,15 @@ def filter_restaurants(
         lo, hi = BUDGET_RANGES[budget_key]
         mask &= (df[COST_COL] >= lo) & (df[COST_COL] <= hi)
 
-    # 3. Cuisine filter — partial match
+    # 3. Cuisine filter — partial match (supports single or multi-cuisine comma-separated: "Pizza, Cafe")
     cuis_clean = cuisine.strip()
     if cuis_clean and cuis_clean.lower() not in ("any", "all"):
-        mask &= df["cuisines"].str.contains(cuis_clean, case=False, na=False)
+        cuis_parts = [p.strip() for p in cuis_clean.split(",") if p.strip()]
+        if len(cuis_parts) == 1:
+            mask &= df["cuisines"].str.contains(cuis_parts[0], case=False, na=False)
+        elif len(cuis_parts) > 1:
+            pattern = "|".join(re.escape(p) for p in cuis_parts)
+            mask &= df["cuisines"].str.contains(pattern, case=False, na=False)
 
     # 4. Rating filter
     if min_rating > 0:

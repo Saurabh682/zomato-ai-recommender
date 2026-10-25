@@ -31,3 +31,33 @@
     background: #34394F;
   }
 }
+
+/* Custom Dark Theme Leaflet Popup */
+.leaflet-popup-content-wrapper {
+  background: #141620 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #232738 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7) !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+.leaflet-popup-tip {
+  background: #141620 !important;
+  border: 1px solid #232738 !important;
+}
+
+.leaflet-container {
+  font-family: inherit !important;
+}
+
+.custom-leaflet-pin {
+  background: transparent !important;
+  border: none !important;
+}

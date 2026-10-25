@@ -9,6 +9,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import type { RestaurantRecommendation } from "../types";
+import { getCuisinePhoto } from "../lib/cuisinePhotos";
 
 interface Props {
   recommendation: RestaurantRecommendation;
@@ -38,6 +39,7 @@ export function RecommendationCard({ recommendation: r, rank, isFallback }: Prop
 
   const isGold = rank === 1;
   const zomatoUrl = `https://www.zomato.com/bangalore/${toSlug(r.name)}-${toSlug(r.location)}/info`;
+  const photoUrl = getCuisinePhoto(r.cuisine, r.name);
 
   return (
     <article
@@ -52,30 +54,46 @@ export function RecommendationCard({ recommendation: r, rank, isFallback }: Prop
         <div className="absolute -top-12 -right-12 w-48 h-48 bg-[#FF334B]/10 rounded-full blur-3xl pointer-events-none" />
       )}
 
-      <div className="space-y-4">
-        {/* Top Header: Rank + Feature Pills */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
+      {/* Food Photo Banner with Floating Badges */}
+      <div className="relative -mx-6 -mt-6 mb-4 h-36 overflow-hidden rounded-t-2xl bg-[#090A0F]">
+        <img
+          src={photoUrl}
+          alt={r.name}
+          loading="lazy"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src =
+              "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80";
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#141620] via-[#141620]/50 to-transparent pointer-events-none" />
+
+        {/* Floating Rank Badge */}
+        <div className="absolute top-3 left-3 z-10">
           <span
-            className={`px-3 py-1 rounded-full text-[11px] tracking-wide flex items-center gap-1 ${currentBadge.badgeClass}`}
+            className={`px-3 py-1 rounded-full text-[11px] tracking-wide flex items-center gap-1 backdrop-blur-md shadow-lg ${currentBadge.badgeClass}`}
           >
             <Sparkles size={11} className={rank <= 2 ? "fill-black" : "fill-white"} />
             {currentBadge.label}
           </span>
-
-          <div className="flex items-center gap-1.5">
-            {r.online_order && (
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                <Wifi size={10} /> Online Order
-              </span>
-            )}
-            {r.book_table && (
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-purple-500/15 text-purple-300 border border-purple-500/30 flex items-center gap-1">
-                <Calendar size={10} /> Book Table
-              </span>
-            )}
-          </div>
         </div>
 
+        {/* Floating Features (Online Order / Book Table) */}
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+          {r.online_order && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-950/80 backdrop-blur-md text-emerald-300 border border-emerald-500/40 flex items-center gap-1 shadow-sm">
+              <Wifi size={10} /> Online
+            </span>
+          )}
+          {r.book_table && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-950/80 backdrop-blur-md text-purple-200 border border-purple-500/40 flex items-center gap-1 shadow-sm">
+              <Calendar size={10} /> Table
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-4">
         {/* Name and Rating */}
         <div>
           <div className="flex items-baseline justify-between gap-3">
