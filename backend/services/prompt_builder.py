@@ -43,7 +43,7 @@ def build_prompt(
     lines.append(f"- **Budget**: {budget.capitalize()} (₹{'≤300' if budget=='low' else '301–700' if budget=='medium' else '>700'} for two)")
     lines.append(f"- **Cuisine**: {cuisine or 'Any'}")
     lines.append(f"- **Minimum Rating**: {min_rating}")
-    if preferences.strip():
+    if (preferences or "").strip():
         lines.append(f"- **Special Preferences**: {preferences.strip()}")
     lines.append("")
 

@@ -80,6 +80,7 @@ def _normalize_recommendations(
             COST_COL: int(row.get(COST_COL, 0)),
             "online_order": str(row.get("online_order", "")).lower() == "yes",
             "book_table": str(row.get("book_table", "")).lower() == "yes",
+            "url": str(row.get("url", "")).strip(),
         }
 
     valid = []
