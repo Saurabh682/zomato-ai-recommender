@@ -42,6 +42,7 @@ async def recommend_more(
             cost_for_two=int(row[COST_COL]),
             online_order=str(row.get("online_order", "")).lower() == "yes",
             book_table=str(row.get("book_table", "")).lower() == "yes",
+            url=str(row.get("url", "")).strip(),
             explanation=(
                 f"Rated {row['aggregate_rating']}/5 with {row['votes']} reviews, "
                 f"serving {row['cuisines']} in {row['location']}."

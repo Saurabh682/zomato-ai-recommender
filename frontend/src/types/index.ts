@@ -9,6 +9,7 @@ export interface RestaurantRecommendation {
   online_order: boolean;
   book_table: boolean;
   explanation: string;
+  url?: string;
 }
 
 export interface RecommendationResponse {

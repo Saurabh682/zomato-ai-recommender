@@ -10,17 +10,13 @@ import {
 } from "lucide-react";
 import type { RestaurantRecommendation } from "../types";
 import { getCuisinePhoto } from "../lib/cuisinePhotos";
+import { getZomatoUrls } from "../lib/zomatoUrl";
 
 interface Props {
   recommendation: RestaurantRecommendation;
   rank: number;
   isFallback: boolean;
 }
-
-// Build Zomato deep-link: zomato.com/bangalore/{name-slug}-{location-slug}/info
-// e.g. "XO Belgian Waffle" + "Koramangala 5th Block" → xo-belgian-waffle-koramangala-5th-block
-const toSlug = (s: string) =>
-  s.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim().replace(/\s+/g, "-");
 
 export function RecommendationCard({ recommendation: r, rank, isFallback }: Props) {
   // Rank badge styling
@@ -38,7 +34,7 @@ export function RecommendationCard({ recommendation: r, rank, isFallback }: Prop
   };
 
   const isGold = rank === 1;
-  const zomatoUrl = `https://www.zomato.com/bangalore/${toSlug(r.name)}-${toSlug(r.location)}/info`;
+  const { primaryUrl, chainUrl } = getZomatoUrls(r);
   const photoUrl = getCuisinePhoto(r.cuisine, r.name);
 
   return (
@@ -147,23 +143,34 @@ export function RecommendationCard({ recommendation: r, rank, isFallback }: Prop
       </div>
 
       {/* Action CTA Buttons */}
-      <div className="flex items-center gap-2.5 pt-5 mt-2">
+      <div className="flex items-center gap-2 pt-5 mt-2">
         <a
-          href={zomatoUrl}
+          href={primaryUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="flex-1 py-2 px-3 rounded-full bg-gradient-to-r from-[#FF334B] to-[#FF5E3A] hover:brightness-110 active:scale-95 text-white font-semibold text-xs flex items-center justify-center gap-1.5 glow-ember transition-all text-center"
         >
-          <span>Explore on Zomato</span>
+          <span>Explore Venue</span>
           <ExternalLink size={12} />
+        </a>
+
+        <a
+          href={chainUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={`Find all ${r.name} venues on Zomato`}
+          className="py-2 px-2.5 rounded-full bg-[#1A1D28] hover:bg-[#252A3A] text-slate-300 hover:text-white border border-[#2A2F42] text-xs transition-all flex items-center gap-1 shrink-0"
+        >
+          <span>All Outlets</span>
+          <ExternalLink size={11} className="opacity-70" />
         </a>
 
         {r.book_table && (
           <a
-            href={zomatoUrl}
+            href={primaryUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="py-2 px-3 rounded-full bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 font-semibold text-xs transition-all flex items-center gap-1"
+            className="py-2 px-3 rounded-full bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 font-semibold text-xs transition-all flex items-center gap-1 shrink-0"
           >
             <Calendar size={12} />
             <span>Reserve</span>

@@ -36,6 +36,7 @@ def _heuristic_top5(candidates: pd.DataFrame) -> list[dict]:
             "cost_for_two": int(row[COST_COL]),
             "online_order": str(row.get("online_order", "")).lower() == "yes",
             "book_table": str(row.get("book_table", "")).lower() == "yes",
+            "url": str(row.get("url", "")).strip(),
             "explanation": (
                 f"Highly rated restaurant ({row['aggregate_rating']}/5 rating) "
                 f"with {row['votes']} reviews serving {row['cuisines']}. "
@@ -134,6 +135,7 @@ def _normalize_recommendations(
             "cost_for_two": cost,
             "online_order": online,
             "book_table": book,
+            "url": str(matched.get("url", "") or r.get("url", "")).strip(),
             "explanation": explanation,
         })
 

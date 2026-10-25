@@ -27,6 +27,7 @@ class RestaurantRecommendation(BaseModel):
     online_order: bool = False
     book_table: bool = False
     explanation: str
+    url: str = ""
 
 
 class RecommendationResponse(BaseModel):

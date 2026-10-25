@@ -4,15 +4,13 @@ import "leaflet/dist/leaflet.css";
 import type { RestaurantRecommendation } from "../types";
 import { getRestaurantCoords } from "../lib/bangaloreLocations";
 import { getCuisinePhoto } from "../lib/cuisinePhotos";
+import { getZomatoUrls } from "../lib/zomatoUrl";
 
 interface Props {
   recommendations: RestaurantRecommendation[];
   selectedRank?: number | null;
   onSelectRank?: (rank: number) => void;
 }
-
-const toSlug = (s: string) =>
-  s.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim().replace(/\s+/g, "-");
 
 export function BangaloreMapView({ recommendations }: Props) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -72,7 +70,7 @@ export function BangaloreMapView({ recommendations }: Props) {
         : "#3B82F6";
 
       const photoUrl = getCuisinePhoto(r.cuisine, r.name);
-      const zomatoUrl = `https://www.zomato.com/bangalore/${toSlug(r.name)}-${toSlug(r.location)}/info`;
+      const { primaryUrl } = getZomatoUrls(r);
 
       // Custom pulsing glowing ember pin
       const iconHtml = `
@@ -111,7 +109,7 @@ export function BangaloreMapView({ recommendations }: Props) {
               <span>📍 ${r.location}</span>
               <span style="color: #34d399; font-weight: 600;">₹${r.cost_for_two}</span>
             </div>
-            <a href="${zomatoUrl}" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; text-align: center; padding: 6px 0; background: linear-gradient(to right, #FF334B, #FF5E3A); color: #ffffff; text-decoration: none; border-radius: 9999px; font-size: 11px; font-weight: 600; box-shadow: 0 2px 10px rgba(255, 51, 75, 0.35);">
+            <a href="${primaryUrl}" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; text-align: center; padding: 6px 0; background: linear-gradient(to right, #FF334B, #FF5E3A); color: #ffffff; text-decoration: none; border-radius: 9999px; font-size: 11px; font-weight: 600; box-shadow: 0 2px 10px rgba(255, 51, 75, 0.35);">
               Explore on Zomato ↗
             </a>
           </div>
