@@ -52,14 +52,27 @@ custom_frontend = os.getenv("FRONTEND_URL")
 if custom_frontend:
     allowed_origins.append(custom_frontend)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"] if os.getenv("ALLOW_ALL_CORS") == "true" else allowed_origins,
-    allow_origin_regex=r"^https:\/\/.*\.vercel\.app$",
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*"],
-    expose_headers=["X-LLM-Fallback"],
-)
+is_allow_all = os.getenv("ALLOW_ALL_CORS", "false").lower() == "true"
+
+if is_allow_all:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["X-LLM-Fallback"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins,
+        allow_origin_regex=r"^https:\/\/.*\.vercel\.app$",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["X-LLM-Fallback"],
+    )
 
 app.include_router(recommend_router)
 app.include_router(more_router)

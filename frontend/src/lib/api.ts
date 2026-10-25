@@ -1,6 +1,6 @@
 import type { UserPreferences, RecommendationResponse } from "../types";
 
-let rawBase = (import.meta.env.VITE_API_BASE_URL || "").trim().replace(/\/+$/, "");
+let rawBase = (import.meta.env.VITE_API_BASE_URL || "https://deamonizer-zomato-ai-backend.hf.space").trim().replace(/\/+$/, "");
 if (rawBase && !rawBase.endsWith("/api")) {
   rawBase += "/api";
 }
@@ -19,7 +19,7 @@ export async function fetchRecommendations(
     if (!res.ok) {
       if (res.status === 503) {
         throw new Error(
-          "Backend is waking up or suspended on Render. Please wait 30s or check your Render dashboard."
+          "Backend is waking up on Hugging Face Spaces. Please wait a few seconds and try again."
         );
       }
       const error = await res.json().catch(() => ({}));
@@ -30,7 +30,7 @@ export async function fetchRecommendations(
   } catch (err: unknown) {
     if (err instanceof Error && err.message.toLowerCase().includes("failed to fetch")) {
       throw new Error(
-        "Unable to reach the backend server. Render free instances sleep after inactivity or require un-suspending in the Render Dashboard."
+        "Unable to reach the backend server. The Hugging Face Space may be waking from sleep or starting up."
       );
     }
     throw err;
@@ -56,7 +56,7 @@ export async function fetchMoreRecommendations(
     if (!res.ok) {
       if (res.status === 503) {
         throw new Error(
-          "Backend is waking up or suspended on Render. Please wait 30s or check your Render dashboard."
+          "Backend is waking up on Hugging Face Spaces. Please wait a few seconds and try again."
         );
       }
       const error = await res.json().catch(() => ({}));
@@ -66,7 +66,7 @@ export async function fetchMoreRecommendations(
   } catch (err: unknown) {
     if (err instanceof Error && err.message.toLowerCase().includes("failed to fetch")) {
       throw new Error(
-        "Unable to reach the backend server. The instance may be sleeping on Render."
+        "Unable to reach the backend server on Hugging Face Spaces. Please retry in a few moments."
       );
     }
     throw err;
